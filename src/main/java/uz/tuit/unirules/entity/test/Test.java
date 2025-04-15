@@ -6,7 +6,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
-import uz.tuit.unirules.entity.user.User;
 
 import java.util.List;
 

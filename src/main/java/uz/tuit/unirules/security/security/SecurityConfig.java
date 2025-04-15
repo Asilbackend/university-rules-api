@@ -41,7 +41,7 @@ public class SecurityConfig {
 //        http.sessionManagement(sessionManagement ->
 //                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        //http.addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class);
         http.userDetailsService(customUserDetailsService);
         // HTTPS ga majburiy qilish
 //        http.requiresChannel(channel -> channel

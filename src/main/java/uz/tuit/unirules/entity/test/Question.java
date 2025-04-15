@@ -2,7 +2,6 @@ package uz.tuit.unirules.entity.test;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Fetch;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 
 import java.util.List;
