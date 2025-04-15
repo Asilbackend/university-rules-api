@@ -1,0 +1,60 @@
+package uz.tuit.unirules.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import uz.tuit.unirules.entity.abs.roles.Role;
+import uz.tuit.unirules.entity.user.User;
+import uz.tuit.unirules.repository.role.RoleRepository;
+import uz.tuit.unirules.repository.user.UserRepository;
+
+@Component
+public class Runner implements CommandLineRunner {
+    @Value("${server.url}")
+    private String serverUrl;
+    private static Role ADMIN = null;
+    private static Role USER = null;
+    private static Role SUPER = null;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+
+    public Runner(PasswordEncoder passwordEncoder, RoleRepository roleRepository,
+                  UserRepository userRepository) {
+        this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        saveRoles();
+        saveUsers();
+        System.out.println(serverUrl + "swagger-ui/index.html#/");
+    }
+
+    private void saveUsers() {
+        User buildUser = User.builder()
+                .firstname("user1")
+                .lastname("userlas1")
+                .phone("+998901234567")
+                .username("1")
+                .email("oktamovasilbek12@gmail.com")
+                .active(true)
+                .role(SUPER)
+                .password(passwordEncoder.encode("1"))
+                .build();
+        userRepository.save(buildUser);
+    }
+
+    private void saveRoles() {
+        Role roleAdmin = new Role("ADMIN");
+        Role roleUser = new Role("USER");
+        Role roleSuperAdmin = new Role("SUPER_ADMIN");
+        ADMIN = roleRepository.save(roleAdmin);
+        USER = roleRepository.save(roleUser);
+        SUPER = roleRepository.save(roleSuperAdmin);
+    }
+
+}

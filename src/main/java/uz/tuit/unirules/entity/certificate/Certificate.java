@@ -1,0 +1,24 @@
+package uz.tuit.unirules.entity.certificate;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import lombok.*;
+import uz.tuit.unirules.entity.abs.BaseEntity;
+import uz.tuit.unirules.entity.attachment.Attachment;
+import uz.tuit.unirules.entity.user_test.UserTest;
+
+import java.time.LocalDate;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Getter
+@Setter
+@Entity
+public class Certificate extends BaseEntity {
+    @ManyToOne
+    private UserTest userTest;
+    @ManyToOne
+    private Attachment attachment;
+    private LocalDate issuedAt; //berilgan sana
+}
