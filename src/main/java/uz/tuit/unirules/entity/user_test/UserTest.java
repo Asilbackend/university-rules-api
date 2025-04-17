@@ -14,9 +14,9 @@ import uz.tuit.unirules.entity.user.User;
 @Setter
 @Entity
 public class UserTest extends BaseEntity {
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User user;
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Test test;
     private Boolean success;
     @Builder.Default

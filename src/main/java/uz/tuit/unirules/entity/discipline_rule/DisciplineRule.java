@@ -1,7 +1,6 @@
 package uz.tuit.unirules.entity.discipline_rule;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.attachment.Attachment;
@@ -13,8 +12,13 @@ import uz.tuit.unirules.entity.attachment.Attachment;
 @Setter
 @Entity
 public class DisciplineRule extends BaseEntity {
+    @Column(nullable = false, length = 255)
     private String title;
-    private String description;
-    @ManyToOne
+
+    @Lob
+    @Column(nullable = false)
+    private String body;
+
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Attachment attachment;
 }

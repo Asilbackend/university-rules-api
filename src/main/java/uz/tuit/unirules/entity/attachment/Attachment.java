@@ -3,7 +3,7 @@ package uz.tuit.unirules.entity.attachment;
 import jakarta.persistence.*;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
-import uz.tuit.unirules.entity.modul.Module;
+import uz.tuit.unirules.entity.content.Content;
 
 import java.util.UUID;
 
@@ -21,12 +21,14 @@ public class Attachment extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AttachType attachType;
     @ManyToOne
-    @JoinColumn(name = "module_id")
-    private Module module;
+    @JoinColumn(name = "content_id")
+    private Content content;
 
     public enum AttachType {
-        VIDEO, PICTURE, PDF_OR_ANY, AUDIO
+        VIDEO, PICTURE, AUDIO, DOCUMENT, ANY
     }
-
+  /*  DOCUMENT — bu yerda PDF, DOCX, PPTX, XLSX, TXT va
+  hokazolarni birlashtirgan umumiy "o‘qiladigan fayl" toifasi sifatida ishlatiladi.
+*/
 
 }

@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.abs.roles.Role;
+import uz.tuit.unirules.entity.faculty.group.Group;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +49,9 @@ public class User extends BaseEntity implements UserDetails {
     private boolean active = false;
     @Builder.Default
     private boolean passedTest = false;
+    @ManyToOne(optional = true)
+    private Group group;
+
     @ManyToOne
     private Role role;
 

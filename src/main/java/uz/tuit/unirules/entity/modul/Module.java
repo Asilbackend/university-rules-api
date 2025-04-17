@@ -3,9 +3,6 @@ package uz.tuit.unirules.entity.modul;
 import jakarta.persistence.*;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
-import uz.tuit.unirules.entity.attachment.Attachment;
-
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,8 +11,14 @@ import java.util.List;
 @Setter
 @Entity
 public class Module extends BaseEntity {
+    @Column(nullable = false)
     private String name;
+    @Lob
+    @Column(nullable = false)
     private String description;
-    @OneToMany(mappedBy = "module", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Attachment> attachment;
+    @Enumerated(EnumType.STRING)
+    private ModuleState moduleState = ModuleState.OPTIONAL; /// hamma uchun majburiy yoki majburiy emas yoki umuman korsatmaslik
+    public enum ModuleState {
+        REQUIRED, OPTIONAL, INVISIBLE
+    }
 }
