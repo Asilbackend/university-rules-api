@@ -49,6 +49,8 @@ public class User extends BaseEntity implements UserDetails {
     private boolean active = false;
     @Builder.Default
     private boolean passedTest = false;
+
+    private String language;
     @ManyToOne(optional = true)
     private Group group;
 

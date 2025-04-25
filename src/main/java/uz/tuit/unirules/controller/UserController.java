@@ -1,4 +1,4 @@
-package uz.tuit.unirules.api.user;
+package uz.tuit.unirules.controller;
 
 
 import org.springframework.web.bind.annotation.PostMapping;
