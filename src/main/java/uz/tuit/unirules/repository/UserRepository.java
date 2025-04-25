@@ -1,4 +1,4 @@
-package uz.tuit.unirules.repository.user;
+package uz.tuit.unirules.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

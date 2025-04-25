@@ -6,8 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import uz.tuit.unirules.entity.abs.roles.Role;
 import uz.tuit.unirules.entity.user.User;
-import uz.tuit.unirules.repository.role.RoleRepository;
-import uz.tuit.unirules.repository.user.UserRepository;
+import uz.tuit.unirules.repository.RoleRepository;
+import uz.tuit.unirules.repository.UserRepository;
 
 @Component
 public class Runner implements CommandLineRunner {
