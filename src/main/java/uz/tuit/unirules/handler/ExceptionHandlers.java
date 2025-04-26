@@ -2,7 +2,6 @@ package uz.tuit.unirules.handler;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -21,7 +20,6 @@ import java.util.Objects;
 
 @ControllerAdvice
 public class ExceptionHandlers {
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ApiResponse<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
         ex.printStackTrace();
