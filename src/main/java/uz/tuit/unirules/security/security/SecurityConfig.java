@@ -9,6 +9,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,15 +34,15 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(m -> m
                 .requestMatchers(SWAGGER_URLS)
-                .permitAll()
-                .requestMatchers("/api/auth/**")
+//                .permitAll()
+//                .requestMatchers("/api/auth/**")
                 .permitAll()
                 .anyRequest().authenticated()
         );
-//        http.sessionManagement(sessionManagement ->
-//                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.sessionManagement(sessionManagement ->
+               sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         http.userDetailsService(customUserDetailsService);
         // HTTPS ga majburiy qilish
 //        http.requiresChannel(channel -> channel

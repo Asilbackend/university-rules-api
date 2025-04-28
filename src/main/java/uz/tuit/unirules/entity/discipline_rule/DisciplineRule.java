@@ -14,7 +14,6 @@ import uz.tuit.unirules.entity.attachment.Attachment;
 public class DisciplineRule extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String title;
-
     @Lob
     @Column(nullable = false)
     private String body;
