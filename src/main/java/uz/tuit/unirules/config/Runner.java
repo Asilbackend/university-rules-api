@@ -5,7 +5,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import uz.tuit.unirules.entity.abs.roles.Role;
+import uz.tuit.unirules.entity.modul.Module;
 import uz.tuit.unirules.entity.user.User;
+import uz.tuit.unirules.repository.ModuleRepository;
 import uz.tuit.unirules.repository.RoleRepository;
 import uz.tuit.unirules.repository.UserRepository;
 
@@ -13,25 +15,41 @@ import uz.tuit.unirules.repository.UserRepository;
 public class Runner implements CommandLineRunner {
     @Value("${server.url}")
     private String serverUrl;
+    @Value("${spring.jpa.hibernate.ddl-auto}")
+    private String ddl;
     private static Role ADMIN = null;
     private static Role USER = null;
     private static Role SUPER = null;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final ModuleRepository moduleRepository;
 
     public Runner(PasswordEncoder passwordEncoder, RoleRepository roleRepository,
-                  UserRepository userRepository) {
+                  UserRepository userRepository, ModuleRepository moduleRepository) {
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
+        this.moduleRepository = moduleRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        saveRoles();
-        saveUsers();
+        if (!ddl.equals("update")) {
+            saveRoles();
+            saveUsers();
+            saveModule();
+        }
         System.out.println(serverUrl + "swagger-ui/index.html#/");
+    }
+
+    private void saveModule() {
+        moduleRepository.save(Module.builder()
+                .description("desc")
+                .isDeleted(false)
+                .moduleState(Module.ModuleState.REQUIRED)
+                .name("name")
+                .build());
     }
 
     private void saveUsers() {

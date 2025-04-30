@@ -40,14 +40,13 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
                     .username(createUserReqDto.username())
                     .password(createUserReqDto.password())
                     .build();
-              userRepository.save(user);
+            userRepository.save(user);
             return new ApiResponse<>(
                     201,
                     "Foydalanuvchi muvaffaqiyatli yaratildi",
                     true,
                     userMapper.toRespDto(user));
-        }
-        else {
+        } else {
             throw new RuntimeException(" already exist username");
         }
     }
@@ -88,7 +87,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
 
     @Override
     public ApiResponse<UserRespDto> delete(Long entityId) {
-        User user=findByUserId(entityId);
+        User user = findByUserId(entityId);
         userRepository.delete(user);
         return new ApiResponse<>(
                 200,
@@ -96,16 +95,21 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
                 true,
                 null
 
-        ) ;
+        );
     }
+
     @Override
     public ApiResponse<List<UserRespDto>> getAll() {
         return new ApiResponse<>(
                 200,
                 "all users",
                 true,
-                userRepository.findAll().stream().map(userMapper::toRespDto).toList()
+                findAllUsers()
         );
+    }
+
+    private List<UserRespDto> findAllUsers() {
+        return userRepository.findAll().stream().map(userMapper::toRespDto).toList();
     }
 
     @Override
@@ -119,7 +123,8 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
                 list
         );
     }
-    public Page<User> findAllPage(Pageable pageable){
+
+    public Page<User> findAllPage(Pageable pageable) {
         return userRepository.findAll(pageable);
     }
 }

@@ -19,8 +19,10 @@ public class Content extends BaseEntity {
     @Lob
     private String body;
     @OneToMany(mappedBy = "content", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Attachment> attachment;
+    private List<Attachment> attachments;
     @ManyToOne
     private Module module;
     private Double averageContentRating;
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

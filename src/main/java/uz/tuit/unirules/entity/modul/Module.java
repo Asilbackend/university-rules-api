@@ -18,6 +18,9 @@ public class Module extends BaseEntity {
     private String description;
     @Enumerated(EnumType.STRING)
     private ModuleState moduleState = ModuleState.OPTIONAL; /// hamma uchun majburiy yoki majburiy emas yoki umuman korsatmaslik
+    @Builder.Default
+    private Boolean isDeleted = false;
+
     public enum ModuleState {
         REQUIRED, OPTIONAL, INVISIBLE
     }

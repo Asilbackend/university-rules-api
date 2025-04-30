@@ -44,7 +44,7 @@ public class ContentStudent extends BaseEntity {
      */
     private LocalDateTime startedAt;
     /**
-     * Content majburiymi user uchun yoki yo‘q
+     * ContentService majburiymi user uchun yoki yo‘q
      */
     private boolean isRequired = false;
 

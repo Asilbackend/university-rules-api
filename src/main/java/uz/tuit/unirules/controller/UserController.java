@@ -1,6 +1,7 @@
 package uz.tuit.unirules.controller;
 
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
@@ -52,7 +53,7 @@ public class UserController implements SimpleCrud<Long, CreateUserReqDto, Update
 
     @Override
     @GetMapping
-    public ApiResponse<List<UserRespDto>> getAllPagination(@RequestParam Pageable pageable) {
+    public ApiResponse<List<UserRespDto>> getAllPagination(@ParameterObject Pageable pageable) {
         return userService.getAllPagination(pageable);
     }
 }

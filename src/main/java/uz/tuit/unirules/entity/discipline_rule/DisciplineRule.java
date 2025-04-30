@@ -12,12 +12,11 @@ import uz.tuit.unirules.entity.attachment.Attachment;
 @Setter
 @Entity
 public class DisciplineRule extends BaseEntity {
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String title;
     @Lob
     @Column(nullable = false)
     private String body;
-
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Attachment attachment;
 }
