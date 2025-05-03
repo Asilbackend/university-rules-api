@@ -27,6 +27,8 @@ public class ContentStudent extends BaseEntity {
     @Max(5)
     private Integer rating;
     private String comment;
+    @Builder.Default
+    private Boolean isDeleted = false;
     /**
      * Majburiy contentlar uchun qaysi joygacha o‘qilgani (masalan, % progress, yoki position)
      */

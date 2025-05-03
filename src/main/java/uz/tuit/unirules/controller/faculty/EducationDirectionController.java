@@ -1,6 +1,7 @@
 package uz.tuit.unirules.controller.faculty;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
@@ -10,7 +11,9 @@ import uz.tuit.unirules.dto.respond_dto.faculty.EducationDirectionRespDto;
 import uz.tuit.unirules.services.faculty.EducationDirectionService;
 
 import java.util.List;
+
 @RestController
+@Validated
 @RequestMapping("/api/edu-direction")
 public class EducationDirectionController implements
         SimpleCrud<Long, CreateEducationDirectionReqDto, UpdateEducationDirectionReqDto, EducationDirectionRespDto> {
@@ -37,12 +40,12 @@ public class EducationDirectionController implements
     public ApiResponse<EducationDirectionRespDto> update(@PathVariable(value = "id") Long entityId,
                                                          @RequestBody UpdateEducationDirectionReqDto updateEducationReqDto) {
 
-        return educationDirectionService.update(entityId,updateEducationReqDto);
+        return educationDirectionService.update(entityId, updateEducationReqDto);
     }
 
     @Override
     @DeleteMapping("/{id}")
-    public ApiResponse<EducationDirectionRespDto> delete(@PathVariable(value = "id")Long entityId) {
+    public ApiResponse<EducationDirectionRespDto> delete(@PathVariable(value = "id") Long entityId) {
         return educationDirectionService.delete(entityId);
     }
 

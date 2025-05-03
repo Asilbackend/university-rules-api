@@ -16,6 +16,8 @@ import uz.tuit.unirules.entity.faculty.education_direction.EducationDirection;
 @Table(name = "groups")
 public class Group extends BaseEntity {
     private String name;
+    @Builder.Default
+    private Boolean isDeleted = false;
     @ManyToOne
     private EducationDirection educationDirection;
 }

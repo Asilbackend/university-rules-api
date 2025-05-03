@@ -1,6 +1,7 @@
 package uz.tuit.unirules.controller;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
@@ -12,6 +13,7 @@ import uz.tuit.unirules.services.discipline_rule.DisciplineRuleService;
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/discipline-rule")
 public class DisciplineRuleController implements
         SimpleCrud<Long, CreateDisciplineRuleReqDto, UpdateDisciplineRuleReqDto, DisciplineRuleRespDto> {

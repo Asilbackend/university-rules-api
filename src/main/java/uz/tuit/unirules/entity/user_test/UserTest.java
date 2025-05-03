@@ -21,5 +21,7 @@ public class UserTest extends BaseEntity {
     private Boolean success;
     @Builder.Default
     private Integer tryCount = 0;// urinishlar soni
+    @Builder.Default
+    private Boolean isDeleted = false;
 
 }

@@ -18,6 +18,8 @@ import java.util.List;
 public class Test extends BaseEntity {
     private String title;
     private String description;
+    @Builder.Default
+    private Boolean isDeleted = false;
     @OneToMany(mappedBy = "test", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions;
 }

@@ -14,6 +14,8 @@ import uz.tuit.unirules.entity.faculty.Faculty;
 @Entity
 public class EducationDirection extends BaseEntity {
     private String name;
+    @Builder.Default
+    private Boolean isDeleted = false;
     @ManyToOne
     private Faculty faculty;
 }

@@ -23,6 +23,8 @@ public class Attachment extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "content_id")
     private Content content;
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     public enum AttachType {
         VIDEO, PICTURE, AUDIO, DOCUMENT, ANY

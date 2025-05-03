@@ -28,12 +28,21 @@ public class DisciplineRuleService implements
 
     @Override
     public ApiResponse<DisciplineRuleRespDto> create(CreateDisciplineRuleReqDto createDisciplineRuleReqDto) {
-        return null;
+        DisciplineRule disciplineRule = DisciplineRule.builder()
+                .title(createDisciplineRuleReqDto.title())
+                .body(createDisciplineRuleReqDto.body())
+                .build();
+        disciplineRuleRepository.save(disciplineRule);
+        return new ApiResponse<>(
+                201,
+                "DisciplineRule is saved",
+                true,
+                disciplineRuleMapper.toDto(disciplineRule));
     }
 
     @Override
     public ApiResponse<DisciplineRuleRespDto> get(Long entityId) {
-        DisciplineRule disciplineRule=findById(entityId);
+        DisciplineRule disciplineRule = findById(entityId);
         return new ApiResponse<>(
                 200,
                 "discipline rule muvaffaqiyatli topildi",
@@ -41,15 +50,16 @@ public class DisciplineRuleService implements
                 disciplineRuleMapper.toDto(disciplineRule)
         );
     }
-    public DisciplineRule findById(Long entityId){
+
+    public DisciplineRule findById(Long entityId) {
         return disciplineRuleRepository.findById(entityId)
-                .orElseThrow(()-> new EntityNotFoundException("bunday discipline rule mavjud emas"));
+                .orElseThrow(() -> new EntityNotFoundException("bunday discipline rule mavjud emas"));
     }
 
     @Override
     public ApiResponse<DisciplineRuleRespDto> update(
             Long entityId, UpdateDisciplineRuleReqDto updateDisciplineRuleReqDto) {
-        DisciplineRule disciplineRule=DisciplineRule.builder()
+        DisciplineRule disciplineRule = DisciplineRule.builder()
                 .title(updateDisciplineRuleReqDto.title())
                 .body(updateDisciplineRuleReqDto.body())
                 .build();
@@ -64,7 +74,7 @@ public class DisciplineRuleService implements
 
     @Override
     public ApiResponse<DisciplineRuleRespDto> delete(Long entityId) {
-        DisciplineRule disciplineRule=findById(entityId);
+        DisciplineRule disciplineRule = findById(entityId);
         disciplineRuleRepository.delete(disciplineRule);
         return new ApiResponse<>(
                 200,
@@ -95,7 +105,8 @@ public class DisciplineRuleService implements
                 findAllPage(pageable).map(disciplineRuleMapper::toDto).toList()
         );
     }
-    public Page<DisciplineRule> findAllPage(Pageable pageable){
+
+    public Page<DisciplineRule> findAllPage(Pageable pageable) {
         return disciplineRuleRepository.findAll(pageable);
     }
 }

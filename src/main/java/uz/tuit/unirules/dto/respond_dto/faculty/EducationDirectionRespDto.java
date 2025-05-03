@@ -1,7 +1,10 @@
 package uz.tuit.unirules.dto.respond_dto.faculty;
 
-public record EducationDirectionRespDto(
-        String name
+import java.io.Serializable;
 
-) {
+public record EducationDirectionRespDto(
+        String name,
+        Long facultyId
+
+) implements Serializable {
 }

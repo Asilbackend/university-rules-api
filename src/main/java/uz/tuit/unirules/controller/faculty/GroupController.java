@@ -1,6 +1,7 @@
 package uz.tuit.unirules.controller.faculty;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
@@ -12,6 +13,7 @@ import uz.tuit.unirules.services.faculty.GroupService;
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/group")
 public class GroupController implements
         SimpleCrud<Long, CreateGroupReqDto, UpdateGroupReqDto, GroupRespDto> {

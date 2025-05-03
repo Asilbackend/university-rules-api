@@ -21,4 +21,6 @@ public class Certificate extends BaseEntity {
     @ManyToOne
     private Attachment attachment;
     private LocalDate issuedAt; //berilgan sana
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

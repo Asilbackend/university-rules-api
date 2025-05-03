@@ -17,6 +17,8 @@ public class DisciplineRule extends BaseEntity {
     @Lob
     @Column(nullable = false)
     private String body;
+    @Builder.Default
+    private Boolean isDeleted = false;
     @ManyToOne(fetch = FetchType.LAZY)
     private Attachment attachment;
 }

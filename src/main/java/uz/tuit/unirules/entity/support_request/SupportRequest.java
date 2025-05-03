@@ -21,6 +21,8 @@ public class SupportRequest extends BaseEntity {
     private User supportUser;
     private String subject;
     private String message;
+    @Builder.Default
+    private Boolean isDeleted = false;
     @Enumerated(value = EnumType.STRING)
     private Status status=Status.CLOSED;
 

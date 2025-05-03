@@ -22,4 +22,6 @@ public class UserTestAnswer extends BaseEntity {
     private UserTest userTest;
     @ManyToOne
     private QuestionOption questionOption;
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

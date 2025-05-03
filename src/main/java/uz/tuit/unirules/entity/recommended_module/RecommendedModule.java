@@ -18,4 +18,6 @@ public class RecommendedModule extends BaseEntity {
     @ManyToOne
     private Module module;
     private String reason;
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

@@ -51,6 +51,8 @@ public class User extends BaseEntity implements UserDetails {
     private boolean passedTest = false;
 
     private String language;
+    @Builder.Default
+    private Boolean isDeleted = false;
     @ManyToOne(optional = true)
     private Group group;
 

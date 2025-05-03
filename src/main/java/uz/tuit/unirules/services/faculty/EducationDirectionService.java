@@ -9,9 +9,11 @@ import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.faculty.CreateEducationDirectionReqDto;
 import uz.tuit.unirules.dto.request_dto.faculty.UpdateEducationDirectionReqDto;
 import uz.tuit.unirules.dto.respond_dto.faculty.EducationDirectionRespDto;
+import uz.tuit.unirules.entity.faculty.Faculty;
 import uz.tuit.unirules.entity.faculty.education_direction.EducationDirection;
 import uz.tuit.unirules.mapper.faculty.EducationDirectionMapper;
 import uz.tuit.unirules.repository.faculty.EducationDirectionRepository;
+import uz.tuit.unirules.repository.faculty.FacultyRepository;
 
 import java.util.List;
 
@@ -20,17 +22,21 @@ public class EducationDirectionService implements
         SimpleCrud<Long, CreateEducationDirectionReqDto, UpdateEducationDirectionReqDto, EducationDirectionRespDto> {
     private final EducationDirectionRepository educationDirectionRepository;
     private final EducationDirectionMapper educationDirectionMapper;
+    private final FacultyService facultyService;
 
     public EducationDirectionService(EducationDirectionRepository educationDirectionRepository,
-                                     EducationDirectionMapper educationDirectionMapper) {
+                                     EducationDirectionMapper educationDirectionMapper, FacultyRepository facultyRepository, FacultyService facultyService) {
         this.educationDirectionRepository = educationDirectionRepository;
         this.educationDirectionMapper = educationDirectionMapper;
+        this.facultyService = facultyService;
     }
 
     @Override
     public ApiResponse<EducationDirectionRespDto> create(CreateEducationDirectionReqDto createEducationReqDto) {
-        if (educationDirectionRepository.findByName(createEducationReqDto.name()).isEmpty()){
-            EducationDirection educationDirection=EducationDirection.builder()
+        // todo: Facultyni olish
+        Faculty faculty = facultyService.findById(createEducationReqDto.facultyId());
+        if (educationDirectionRepository.findByName(createEducationReqDto.name()).isEmpty()) {
+            EducationDirection educationDirection = EducationDirection.builder()
                     .name(createEducationReqDto.name())
                     .build();
             educationDirectionRepository.save(educationDirection);
@@ -46,7 +52,7 @@ public class EducationDirectionService implements
 
     @Override
     public ApiResponse<EducationDirectionRespDto> get(Long entityId) {
-        EducationDirection educationDirection=findById(entityId);
+        EducationDirection educationDirection = findById(entityId);
         return new ApiResponse<>(
                 200,
                 "education direction muvaffaqiyatli topildi",
@@ -55,18 +61,18 @@ public class EducationDirectionService implements
         );
     }
 
-    public EducationDirection findById(Long entityId){
-    return educationDirectionRepository.findById(entityId)
-            .orElseThrow(() -> new EntityNotFoundException("bunday education direction topilmadi"));
+    public EducationDirection findById(Long entityId) {
+        return educationDirectionRepository.findById(entityId)
+                .orElseThrow(() -> new EntityNotFoundException("bunday education direction topilmadi"));
 
     }
 
     @Override
     public ApiResponse<EducationDirectionRespDto> update(Long entityId,
                                                          UpdateEducationDirectionReqDto updateEducationReqDto) {
-       EducationDirection educationDirection=findById(entityId);
-       educationDirection.setName(updateEducationReqDto.name());
-       educationDirectionRepository.save(educationDirection);
+        EducationDirection educationDirection = findById(entityId);
+        educationDirection.setName(updateEducationReqDto.name());
+        educationDirectionRepository.save(educationDirection);
         return new ApiResponse<>(
                 200,
                 "educatioin direction muvaffaqiyatli update boldi",
@@ -85,6 +91,7 @@ public class EducationDirectionService implements
                 null
         );
     }
+
     @Override
     public ApiResponse<List<EducationDirectionRespDto>> getAll() {
         return new ApiResponse<>(
@@ -104,7 +111,8 @@ public class EducationDirectionService implements
                 findAllPage(pageable).map(educationDirectionMapper::toDto).toList()
         );
     }
-    public Page<EducationDirection> findAllPage(Pageable pageable){
+
+    public Page<EducationDirection> findAllPage(Pageable pageable) {
         return educationDirectionRepository.findAll(pageable);
     }
 

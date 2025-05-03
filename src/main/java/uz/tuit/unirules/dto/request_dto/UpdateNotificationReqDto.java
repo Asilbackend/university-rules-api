@@ -1,11 +1,15 @@
 package uz.tuit.unirules.dto.request_dto;
 
-import uz.tuit.unirules.entity.user.User;
+import jakarta.validation.constraints.NotBlank;
+import java.io.Serializable;
 
 public record UpdateNotificationReqDto(
-        User user,
+        @NotBlank
         String title,
+        @NotBlank
         String message,
-        Boolean is_read
-) {
+        Boolean is_read,
+        @NotBlank
+        Long userId
+) implements Serializable {
 }

@@ -1,6 +1,7 @@
 package uz.tuit.unirules.controller;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
@@ -27,6 +28,7 @@ public class NotificationController implements
     }
 
     @Override
+    @Validated
     @GetMapping("/{id}")
     public ApiResponse<NotificationRespDto> get(@PathVariable(value =  "id") Long entityId) {
         return service.get(entityId);

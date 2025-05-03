@@ -30,7 +30,16 @@ public class RecommendedModuleService implements
 
     @Override
     public ApiResponse<RecommendedModuleRespDto> create(CreateRecommendedModuleReqDto createRecommendedModuleReqDto) {
-        return null;
+        RecommendedModule recommendedModule=RecommendedModule.builder()
+                .reason(createRecommendedModuleReqDto.reason())
+                .build();
+        recommendedModuleRepository.save(recommendedModule);
+        return new ApiResponse<>(
+                201,
+                "Recommended Module is saved",
+                true,
+                recommendedModuleMapper.toDto(recommendedModule)
+        );
     }
 
     @Override

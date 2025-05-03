@@ -7,6 +7,6 @@ import uz.tuit.unirules.entity.user.User;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    UserRespDto toRespDto(User user);
+   // UserRespDto toRespDto(User user);
 
 }

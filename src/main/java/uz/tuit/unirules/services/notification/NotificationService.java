@@ -28,7 +28,18 @@ public class NotificationService implements
 
     @Override
     public ApiResponse<NotificationRespDto> create(CreateNotificationReqDto createNotificationReqDto) {
-        return null;
+       Notification notification=Notification.builder()
+               .is_read(createNotificationReqDto.is_read())
+               .message(createNotificationReqDto.message())
+               .title(createNotificationReqDto.title())
+               .build();
+       repository.save(notification);
+        return new ApiResponse<>(
+                201,
+                "Notification is saved",
+                true,
+                mapper.toDto(notification)
+        );
     }
 
     @Override

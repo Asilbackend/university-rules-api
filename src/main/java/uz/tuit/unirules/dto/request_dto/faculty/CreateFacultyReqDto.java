@@ -1,7 +1,13 @@
 package uz.tuit.unirules.dto.request_dto.faculty;
 
-public record CreateFacultyReqDto (
-         String name,
-         String description
-){
+import jakarta.validation.constraints.NotBlank;
+
+import java.io.Serializable;
+
+public record CreateFacultyReqDto(
+        @NotBlank
+        String name,
+        @NotBlank
+        String description
+) implements Serializable {
 }
