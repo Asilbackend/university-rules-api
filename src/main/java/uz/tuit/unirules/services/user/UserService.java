@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.CreateUserReqDto;
@@ -16,6 +17,8 @@ import uz.tuit.unirules.mapper.UserMapper;
 import uz.tuit.unirules.projections.UserProjection;
 import uz.tuit.unirules.repository.RoleRepository;
 import uz.tuit.unirules.repository.UserRepository;
+import uz.tuit.unirules.services.attachment.AttachmentService;
+import uz.tuit.unirules.services.discipline_rule.DisciplineRuleService;
 import uz.tuit.unirules.services.faculty.GroupService;
 
 import java.util.ArrayList;
@@ -25,18 +28,17 @@ import java.util.Optional;
 @Service
 public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUserReqDto, UserRespDto> {
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
     private final GroupService groupService;
     private final RoleRepository roleRepository;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper, GroupService groupService, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, GroupService groupService, RoleRepository roleRepository, DisciplineRuleService disciplineRuleService, AttachmentService attachmentService) {
         this.userRepository = userRepository;
-        this.userMapper = userMapper;
         this.groupService = groupService;
         this.roleRepository = roleRepository;
     }
 
     @Override
+    @Transactional
     public ApiResponse<UserRespDto> create(CreateUserReqDto createUserReqDto) {
         if (!createUserReqDto.rePassword().equals(createUserReqDto.password())) {
             throw new RuntimeException("Passwords are not equal");
@@ -107,17 +109,22 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
     }
 
     @Override
+    @Transactional
     public ApiResponse<UserRespDto> update(Long entityId, UpdateUserReqDto updateUserReqDto) {
         Group group = groupService.findByGroupId(updateUserReqDto.groupId());
         Optional<Role> role = roleRepository.findByRole(updateUserReqDto.role());
         User user = findByUserId(entityId);
-        user.setFirstname(updateUserReqDto.firstname());
-        user.setLastname(updateUserReqDto.lastname());
-        user.setEmail(updateUserReqDto.email());
-        user.setPhone(updateUserReqDto.phone());
-        user.setGroup(group);
-        user.setRole(role.get());
-        userRepository.save(user);
+        try {
+            user.setFirstname(updateUserReqDto.firstname());
+            user.setLastname(updateUserReqDto.lastname());
+            user.setEmail(updateUserReqDto.email());
+            user.setPhone(updateUserReqDto.phone());
+            user.setGroup(group);
+            user.setRole(role.get());
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return new ApiResponse<>(
                 204,
                 "userning malumotlari muvaffaqiyatli update boldi",
@@ -127,6 +134,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
     }
 
     @Override
+    @Transactional
     public ApiResponse<UserRespDto> delete(Long entityId) {
         User user = findByUserId(entityId);
         user.setIsDeleted(true);
@@ -141,25 +149,34 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<UserRespDto>> getAll() {
+        List<UserRespDto> userRespDtoList = userRepository.findAllUsers(false).stream()
+                .map(UserService::makeUserRespDtoFromUserProjection).toList();
         return new ApiResponse<>(
                 200,
                 "all users",
                 true,
-                findAllUsers()
+                userRespDtoList
         );
     }
 
-    private List<UserRespDto> findAllUsers() {
-        return userRepository.findAllUsers(false).stream().map(UserService::makeUserRespDtoFromUserProjection).toList();
-    }
-
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<UserRespDto>> getAllPagination(Pageable pageable) {
         Page<User> allPage = findAllPage(pageable);
-        List<User> userList = allPage.getContent().stream().filter(user -> user.getIsDeleted().equals(false)).toList();
+        List<User> userList = allPage.getContent().stream().filter(
+                user -> user.getIsDeleted().equals(false)).toList();
         List<UserRespDto> dtoList = new ArrayList<>();
-        userList.forEach(user -> dtoList.add(new UserRespDto(user.getFirstname(),user.getLastname(),user.getEmail(),user.getPhone(),user.getLanguage(),user.isPassedTest(),user.getGroup().getId(),user.getRole().getAuthority())));
+        userList.forEach(user -> dtoList.add(new UserRespDto(
+                user.getFirstname(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getLanguage(),
+                user.isPassedTest(),
+                user.getGroup().getId(),
+                user.getRole().getAuthority())));
         return new ApiResponse<>(
                 200,
                 "all users pages",
