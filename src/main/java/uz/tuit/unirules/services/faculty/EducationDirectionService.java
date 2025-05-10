@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.faculty.CreateEducationDirectionReqDto;
@@ -32,22 +33,24 @@ public class EducationDirectionService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<EducationDirectionRespDto> create(CreateEducationDirectionReqDto createEducationReqDto) {
         // todo: Facultyni olish
         Faculty faculty = facultyService.findById(createEducationReqDto.facultyId());
         if (educationDirectionRepository.findByName(createEducationReqDto.name()).isEmpty()) {
             EducationDirection educationDirection = EducationDirection.builder()
                     .name(createEducationReqDto.name())
+                    .faculty(faculty)
                     .build();
             educationDirectionRepository.save(educationDirection);
             return new ApiResponse<>(
                     201,
-                    "Education Direction muvaffaqiyatli yaratildi",
+                    "%s education direction is created  successfully".formatted(educationDirection.getName()),
                     true,
                     educationDirectionMapper.toDto(educationDirection)
             );
         }
-        throw new RuntimeException("bunday education Direction mavjud");
+        throw new RuntimeException("This Education direction is already exist");
     }
 
     @Override
@@ -55,7 +58,7 @@ public class EducationDirectionService implements
         EducationDirection educationDirection = findById(entityId);
         return new ApiResponse<>(
                 200,
-                "education direction muvaffaqiyatli topildi",
+                "Education direction is found successfully by id = %s".formatted(entityId),
                 true,
                 educationDirectionMapper.toDto(educationDirection)
         );
@@ -68,10 +71,13 @@ public class EducationDirectionService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<EducationDirectionRespDto> update(Long entityId,
                                                          UpdateEducationDirectionReqDto updateEducationReqDto) {
         EducationDirection educationDirection = findById(entityId);
+        Faculty faculty=facultyService.findById(updateEducationReqDto.facultyId());
         educationDirection.setName(updateEducationReqDto.name());
+        educationDirection.setFaculty(faculty);
         educationDirectionRepository.save(educationDirection);
         return new ApiResponse<>(
                 200,
@@ -82,6 +88,7 @@ public class EducationDirectionService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<EducationDirectionRespDto> delete(Long entityId) {
         educationDirectionRepository.delete(findById(entityId));
         return new ApiResponse<>(
@@ -93,6 +100,7 @@ public class EducationDirectionService implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<EducationDirectionRespDto>> getAll() {
         return new ApiResponse<>(
                 200,
@@ -103,6 +111,7 @@ public class EducationDirectionService implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<EducationDirectionRespDto>> getAllPagination(Pageable pageable) {
         return new ApiResponse<>(
                 200,

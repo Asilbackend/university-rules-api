@@ -60,6 +60,12 @@ public class RoleService implements SimpleCrud<Long, RoleDto, RoleDto, RoleDto> 
                         new EntityNotFoundException("role is not found by id = %s".formatted(entityId)));
     }
 
+    public Role findRoleByName(String roleName) {
+        return roleRepository.findByRole(roleName).orElseThrow(() -> new EntityNotFoundException(
+                "role is not found by this name : %s".formatted(roleName)
+        ));
+    }
+
     @Override
     public ApiResponse<RoleDto> update(Long entityId, RoleDto roleDto) {
         return null;

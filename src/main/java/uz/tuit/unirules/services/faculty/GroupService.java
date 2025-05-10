@@ -4,11 +4,13 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.faculty.CreateGroupReqDto;
 import uz.tuit.unirules.dto.request_dto.faculty.UpdateGroupReqDto;
 import uz.tuit.unirules.dto.respond_dto.faculty.GroupRespDto;
+import uz.tuit.unirules.entity.faculty.education_direction.EducationDirection;
 import uz.tuit.unirules.entity.faculty.group.Group;
 import uz.tuit.unirules.mapper.faculty.GroupMapper;
 import uz.tuit.unirules.repository.faculty.GroupRepository;
@@ -20,26 +22,34 @@ import java.util.Optional;
 public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateGroupReqDto, GroupRespDto> {
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
+    private final EducationDirectionService educationDirectionService;
 
-    public GroupService(GroupRepository groupRepository, GroupMapper groupMapper) {
+    public GroupService(GroupRepository groupRepository, GroupMapper groupMapper, EducationDirectionService educationDirectionService) {
         this.groupRepository = groupRepository;
         this.groupMapper = groupMapper;
+        this.educationDirectionService = educationDirectionService;
+
     }
 
     @Override
+    @Transactional
     public ApiResponse<GroupRespDto> create(CreateGroupReqDto createGroupReqDto) {
+        // education direction olish
+        EducationDirection educationDirection = educationDirectionService.
+                findById(createGroupReqDto.educationDirectionId());
         if (groupRepository.findByName(createGroupReqDto.name()).isEmpty()) {
             Group group = Group.builder()
                     .name(createGroupReqDto.name())
+                    .educationDirection(educationDirection)
                     .build();
             groupRepository.save(group);
             return new ApiResponse<>(
                     201,
-                    "Group muvafaqqiyatli yaratildi",
+                    "Group is created successfully",
                     true,
                     groupMapper.toDto(group));
         } else {
-            throw new RuntimeException(" Bu Group mavjud");
+            throw new RuntimeException("this group is already exist");
         }
     }
 
@@ -61,6 +71,7 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
     }
 
     @Override
+    @Transactional
     public ApiResponse<GroupRespDto> update(Long entityId, UpdateGroupReqDto updateGroupReqDto) {
         Group group = findByGroupId(entityId);
         group.setName(updateGroupReqDto.name());
@@ -74,6 +85,7 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
     }
 
     @Override
+    @Transactional
     public ApiResponse<GroupRespDto> delete(Long entityId) {
         Group group = findByGroupId(entityId);
         groupRepository.delete(group);
@@ -86,6 +98,7 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<GroupRespDto>> getAll() {
         return new ApiResponse<>(
                 200,
@@ -96,9 +109,10 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<GroupRespDto>> getAllPagination(Pageable pageable) {
-        Page<Group> allPage= findAllPage(pageable);
-        List<GroupRespDto> list=allPage.map(groupMapper::toDto).toList();
+        Page<Group> allPage = findAllPage(pageable);
+        List<GroupRespDto> list = allPage.map(groupMapper::toDto).toList();
         return new ApiResponse<>(
                 200,
                 "hamma group pages",
@@ -106,7 +120,8 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
                 list
         );
     }
-    public Page<Group> findAllPage(Pageable pageable){
+
+    public Page<Group> findAllPage(Pageable pageable) {
         return groupRepository.findAll(pageable);
     }
 }

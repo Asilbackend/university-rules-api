@@ -55,11 +55,12 @@ public class DisciplineRuleService implements
         DisciplineRuleProjection disciplineRuleProjection = disciplineRuleRepository
                 .findDisciplineRuleById(entityId).
                 orElseThrow(() ->
-                        new EntityNotFoundException("discipline rule is not found by id = %s".formatted(entityId)));
+                        new EntityNotFoundException(
+                                "discipline rule is not found by id = %s".formatted(entityId)));
         DisciplineRuleRespDto respDto = makeDisciplineRuleFromProjection(disciplineRuleProjection);
         return new ApiResponse<>(
                 200,
-                "discipline rule muvaffaqiyatli topildi",
+                "discipline rule is found",
                 true,
                 respDto
         );
@@ -74,7 +75,8 @@ public class DisciplineRuleService implements
 
     public DisciplineRule findDisciplineRuleById(Long entityId) {
         return disciplineRuleRepository.findById(entityId)
-                .orElseThrow(() -> new EntityNotFoundException("Discipline Rule is not exist by id = %s".formatted(entityId)));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Discipline Rule is not found by id = %s".formatted(entityId)));
     }
 
     @Override

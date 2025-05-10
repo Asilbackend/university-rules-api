@@ -4,14 +4,19 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.CreateRecommendedModuleReqDto;
 import uz.tuit.unirules.dto.request_dto.UpdateRecommendedModuleReqDto;
 import uz.tuit.unirules.dto.respond_dto.RecommendedModuleRespDto;
+import uz.tuit.unirules.entity.modul.Module;
 import uz.tuit.unirules.entity.recommended_module.RecommendedModule;
+import uz.tuit.unirules.entity.user.User;
 import uz.tuit.unirules.mapper.RecommendedModuleMapper;
 import uz.tuit.unirules.repository.RecommendedModuleRepository;
+import uz.tuit.unirules.services.module.ModuleService;
+import uz.tuit.unirules.services.user.UserService;
 
 import java.util.List;
 
@@ -21,17 +26,28 @@ public class RecommendedModuleService implements
                 UpdateRecommendedModuleReqDto, RecommendedModuleRespDto> {
     private final RecommendedModuleRepository recommendedModuleRepository;
     private final RecommendedModuleMapper recommendedModuleMapper;
+    private final UserService userService;
+    private final ModuleService moduleService;
 
     public RecommendedModuleService(RecommendedModuleRepository recommendedModuleRepository,
-                                    RecommendedModuleMapper recommendedModuleMapper) {
+                                    RecommendedModuleMapper recommendedModuleMapper, UserService userService, ModuleService moduleService) {
         this.recommendedModuleRepository = recommendedModuleRepository;
         this.recommendedModuleMapper = recommendedModuleMapper;
+        this.userService = userService;
+        this.moduleService = moduleService;
     }
 
     @Override
+    @Transactional
     public ApiResponse<RecommendedModuleRespDto> create(CreateRecommendedModuleReqDto createRecommendedModuleReqDto) {
-        RecommendedModule recommendedModule=RecommendedModule.builder()
+        //module ni olib keladi
+        Module module = moduleService.findById(createRecommendedModuleReqDto.moduleId());
+        // userni olib keladi
+        User user = userService.findByUserId(createRecommendedModuleReqDto.userId());
+        RecommendedModule recommendedModule = RecommendedModule.builder()
                 .reason(createRecommendedModuleReqDto.reason())
+                .module(module)
+                .user(user)
                 .build();
         recommendedModuleRepository.save(recommendedModule);
         return new ApiResponse<>(
@@ -59,6 +75,7 @@ public class RecommendedModuleService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<RecommendedModuleRespDto> update(Long entityId, UpdateRecommendedModuleReqDto updateRecommendedModuleReqDto) {
         RecommendedModule recommendedModule = findById(entityId);
         recommendedModule.setReason(updateRecommendedModuleReqDto.reason());
@@ -72,6 +89,7 @@ public class RecommendedModuleService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<RecommendedModuleRespDto> delete(Long entityId) {
         RecommendedModule recommendedModule = findById(entityId);
         recommendedModuleRepository.delete(recommendedModule);
@@ -84,6 +102,7 @@ public class RecommendedModuleService implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<RecommendedModuleRespDto>> getAll() {
         return new ApiResponse<>(
                 200,
@@ -96,6 +115,7 @@ public class RecommendedModuleService implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<RecommendedModuleRespDto>> getAllPagination(Pageable pageable) {
         return new ApiResponse<>(
                 200,
@@ -104,7 +124,8 @@ public class RecommendedModuleService implements
                 findAllPage(pageable).map(recommendedModuleMapper::toDto).toList()
         );
     }
-    public Page<RecommendedModule> findAllPage(Pageable pageable){
+
+    public Page<RecommendedModule> findAllPage(Pageable pageable) {
         return recommendedModuleRepository.findAll(pageable);
     }
 }

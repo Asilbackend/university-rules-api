@@ -1,21 +1,31 @@
 package uz.tuit.unirules.controller;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.RoleDto;
 import uz.tuit.unirules.dto.SimpleCrud;
+import uz.tuit.unirules.services.role.RoleService;
 
 import java.util.List;
+@RestController
 @RequestMapping("/api/role")
 public class RoleController implements SimpleCrud<Long, RoleDto,RoleDto,RoleDto> {
-    @Override
-    public ApiResponse<RoleDto> create(RoleDto roleDto) {
-        return null;
+    private final RoleService roleService;
+
+    public RoleController(RoleService roleService) {
+        this.roleService = roleService;
     }
 
     @Override
-    public ApiResponse<RoleDto> get(Long entityId) {
+    @PostMapping
+    public ApiResponse<RoleDto> create(@RequestBody RoleDto roleDto) {
+        return roleService.create(roleDto);
+    }
+
+    @Override
+    @GetMapping("/{id}")
+    public ApiResponse<RoleDto> get(@PathVariable Long id) {
         return null;
     }
 
@@ -30,11 +40,13 @@ public class RoleController implements SimpleCrud<Long, RoleDto,RoleDto,RoleDto>
     }
 
     @Override
+    @GetMapping("/all")
     public ApiResponse<List<RoleDto>> getAll() {
         return null;
     }
 
     @Override
+    @GetMapping
     public ApiResponse<List<RoleDto>> getAllPagination(Pageable pageable) {
         return null;
     }

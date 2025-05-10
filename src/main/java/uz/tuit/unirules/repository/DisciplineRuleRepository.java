@@ -11,21 +11,19 @@ import java.util.Optional;
 public interface DisciplineRuleRepository extends JpaRepository<DisciplineRule,Long> {
     @Query(value = """ 
             SELECT dr.id as id,
-            dr.attachment_id as attachment_id,
-            dr.title as title,
-            dr.description as descrioption
+            dr.attachment_id as attachmentId,
+            dr.title as title
             FROM discipline_rule dr
-             WHERE dr.id : id;
+             WHERE dr.is_deleted =: isDeleted;
             """,nativeQuery = true)
     List<DisciplineRuleProjection> findAllDisciplineRules(Boolean isDeleted);
 
     @Query(value = """ 
             SELECT dr.id as id,
-            dr.attachment_id as attachment_id,
-            dr.title as title,
-            dr.description as descrioption
+            dr.attachment_id as attachmentId,
+            dr.title as title
             FROM discipline_rule dr
-             WHERE dr.id : id;
+             WHERE dr.id =: id;
             """,nativeQuery = true)
-    Optional<DisciplineRuleProjection> findDisciplineRuleById(Long entityId);
+    Optional<DisciplineRuleProjection> findDisciplineRuleById(Long id);
 }

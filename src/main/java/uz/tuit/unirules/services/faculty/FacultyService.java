@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.faculty.CreateFacultyReqDto;
@@ -27,6 +28,7 @@ public class FacultyService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<FacultyRespDto> create(CreateFacultyReqDto createFacultyReqDto) {
         if (facultyRepository.findByName(createFacultyReqDto.name()).isEmpty()){
             Faculty faculty=Faculty.builder()
@@ -62,6 +64,7 @@ public class FacultyService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<FacultyRespDto> update(Long entityId, UpdateFacultyReqDto updateFacultyReqDto) {
         Faculty faculty=findById(entityId);
         faculty.setName(updateFacultyReqDto.name());
@@ -76,6 +79,7 @@ public class FacultyService implements
     }
 
     @Override
+    @Transactional
     public ApiResponse<FacultyRespDto> delete(Long entityId) {
         Faculty faculty=findById(entityId);
         facultyRepository.delete(faculty);
@@ -88,6 +92,7 @@ public class FacultyService implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<FacultyRespDto>> getAll() {
         return new ApiResponse<>(
                 200,
@@ -98,6 +103,7 @@ public class FacultyService implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<FacultyRespDto>> getAllPagination(Pageable pageable) {
         Page<Faculty> allPage=findAllPage(pageable);
         return new ApiResponse<>(

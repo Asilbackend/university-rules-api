@@ -15,11 +15,11 @@ import uz.tuit.unirules.entity.faculty.group.Group;
 import uz.tuit.unirules.entity.user.User;
 import uz.tuit.unirules.mapper.UserMapper;
 import uz.tuit.unirules.projections.UserProjection;
-import uz.tuit.unirules.repository.RoleRepository;
 import uz.tuit.unirules.repository.UserRepository;
 import uz.tuit.unirules.services.attachment.AttachmentService;
 import uz.tuit.unirules.services.discipline_rule.DisciplineRuleService;
 import uz.tuit.unirules.services.faculty.GroupService;
+import uz.tuit.unirules.services.role.RoleService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +29,12 @@ import java.util.Optional;
 public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUserReqDto, UserRespDto> {
     private final UserRepository userRepository;
     private final GroupService groupService;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper, GroupService groupService, RoleRepository roleRepository, DisciplineRuleService disciplineRuleService, AttachmentService attachmentService) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, GroupService groupService, DisciplineRuleService disciplineRuleService, AttachmentService attachmentService, RoleService roleService) {
         this.userRepository = userRepository;
         this.groupService = groupService;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
     }
 
     @Override
@@ -46,7 +46,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         //todo: group ni obkelish uchun
         Group group = groupService.findByGroupId(createUserReqDto.groupId());
         // todo: role ni ob kelish uchun
-        Optional<Role> role = roleRepository.findByRole(createUserReqDto.role());
+        Role role = roleService.findRoleByName(createUserReqDto.role());
         if (userRepository.findUserProjectionByUsername(createUserReqDto.username()).isEmpty()) {
             User user = User.builder()
                     .firstname(createUserReqDto.firstname())
@@ -65,7 +65,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
                     user.getLanguage(),
                     user.isPassedTest(),
                     group.getId(),
-                    role.get().getAuthority());
+                    role.getRole());
             return new ApiResponse<>(
                     201,
                     "Foydalanuvchi muvaffaqiyatli yaratildi",
@@ -112,7 +112,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
     @Transactional
     public ApiResponse<UserRespDto> update(Long entityId, UpdateUserReqDto updateUserReqDto) {
         Group group = groupService.findByGroupId(updateUserReqDto.groupId());
-        Optional<Role> role = roleRepository.findByRole(updateUserReqDto.role());
+        Role role = roleService.findRoleByName(updateUserReqDto.role());
         User user = findByUserId(entityId);
         try {
             user.setFirstname(updateUserReqDto.firstname());
@@ -120,7 +120,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
             user.setEmail(updateUserReqDto.email());
             user.setPhone(updateUserReqDto.phone());
             user.setGroup(group);
-            user.setRole(role.get());
+            user.setRole(role);
             userRepository.save(user);
         } catch (Exception e) {
             throw new RuntimeException(e);

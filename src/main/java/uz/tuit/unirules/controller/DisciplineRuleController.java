@@ -1,5 +1,6 @@
 package uz.tuit.unirules.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 // requestmapping annotantioni spring frameworkda https sorovlarni klasslarga yoki metodlarga boglash uchun ishlatiladi. bu annotatsiay orqali qaysi url qaysi klass yoki metodga tegishli ekanini belgilanadi. bu annotatsiya klasdagi barcha metodlar uchun asosiy yol bolib xizmat qiladi.
 @RequestMapping("/api/discipline-rule")
+@Tag(name = "DisciplineRule Management ")
 public class DisciplineRuleController implements
         SimpleCrud<Long, CreateDisciplineRuleReqDto, UpdateDisciplineRuleReqDto, DisciplineRuleRespDto> {
     private final DisciplineRuleService disciplineRuleService;

@@ -9,12 +9,13 @@ import java.util.Optional;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Optional<Role> findByRole(String name);
+
     @Query(value = """
             SELECT
              r.id as id,
              r.role as role
-             FROM role r WHERE r.id:id;
-                        """ ,nativeQuery = true)
+             FROM role r;
+                        """, nativeQuery = true)
     List<Role> getAllRoles();
 
 }
