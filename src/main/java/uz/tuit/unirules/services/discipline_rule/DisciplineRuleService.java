@@ -68,9 +68,9 @@ public class DisciplineRuleService implements
 
     private static DisciplineRuleRespDto makeDisciplineRuleFromProjection(DisciplineRuleProjection projection) {
         return new DisciplineRuleRespDto(
-                projection.Title(),
-                projection.Body(),
-                projection.AttachmentId());
+                projection.getTitle(),
+                projection.getBody(),
+                projection.getAttachmentId());
     }
 
     public DisciplineRule findDisciplineRuleById(Long entityId) {

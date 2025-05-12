@@ -12,18 +12,20 @@ public interface DisciplineRuleRepository extends JpaRepository<DisciplineRule,L
     @Query(value = """ 
             SELECT dr.id as id,
             dr.attachment_id as attachmentId,
-            dr.title as title
+            dr.title as title,
+            dr.body as body
             FROM discipline_rule dr
-             WHERE dr.is_deleted =: isDeleted;
+             WHERE dr.is_deleted = ?1;
             """,nativeQuery = true)
     List<DisciplineRuleProjection> findAllDisciplineRules(Boolean isDeleted);
 
     @Query(value = """ 
             SELECT dr.id as id,
             dr.attachment_id as attachmentId,
-            dr.title as title
+            dr.title as title,
+            dr.body as body
             FROM discipline_rule dr
-             WHERE dr.id =: id;
+             WHERE dr.id = ?1;
             """,nativeQuery = true)
     Optional<DisciplineRuleProjection> findDisciplineRuleById(Long id);
 }

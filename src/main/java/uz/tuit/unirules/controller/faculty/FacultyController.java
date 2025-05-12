@@ -50,14 +50,14 @@ public class FacultyController implements
     }
 
     @Override
-    @GetMapping("all")
+    @GetMapping("/all")
     public ApiResponse<List<FacultyRespDto>> getAll() {
         return facultyService.getAll();
     }
 
     @Override
     @GetMapping
-    public ApiResponse<List<FacultyRespDto>> getAllPagination(@RequestParam Pageable pageable) {
+    public ApiResponse<List<FacultyRespDto>> getAllPagination( Pageable pageable) {
         return facultyService.getAllPagination(pageable);
     }
 }

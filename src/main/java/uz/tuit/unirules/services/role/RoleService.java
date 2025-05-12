@@ -79,14 +79,11 @@ public class RoleService implements SimpleCrud<Long, RoleDto, RoleDto, RoleDto> 
     @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<RoleDto>> getAll() {
-        List<RoleDto> dtoList = roleRepository.getAllRoles()
-                .stream().map(roleMapper::toDto).toList();
         return new ApiResponse<>(
                 200,
                 "all roles",
                 true,
-                dtoList
-        );
+                roleRepository.findAll().stream().map(roleMapper::toDto).toList());
     }
 
     @Override

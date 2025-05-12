@@ -56,7 +56,7 @@ public class RecommendedModuleController implements
 
     @Override
     @GetMapping
-    public ApiResponse<List<RecommendedModuleRespDto>> getAllPagination(@RequestParam Pageable pageable) {
+    public ApiResponse<List<RecommendedModuleRespDto>> getAllPagination(Pageable pageable) {
         return service.getAllPagination(pageable);
     }
 }

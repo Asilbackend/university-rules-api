@@ -9,7 +9,6 @@ public record UpdateDisciplineRuleReqDto(
         String title,
         @NotBlank
         String body,
-        @NotBlank
         Long attachmentId
 ) implements Serializable {
 }

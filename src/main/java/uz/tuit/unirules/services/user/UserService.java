@@ -81,7 +81,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
     public ApiResponse<UserRespDto> get(Long entityId) {
         UserProjection userProjection = userRepository.findUserById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "user is not find by this id = :%s".formatted(entityId)));
+                        "user is not find by this id = %s".formatted(entityId)));
         UserRespDto dto = makeUserRespDtoFromUserProjection(userProjection);
         return new ApiResponse<>(
                 200,
@@ -175,7 +175,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
                 user.getPhone(),
                 user.getLanguage(),
                 user.isPassedTest(),
-                user.getGroup().getId(),
+                user.getGroup() == null ? null : user.getGroup().getId(),
                 user.getRole().getAuthority())));
         return new ApiResponse<>(
                 200,

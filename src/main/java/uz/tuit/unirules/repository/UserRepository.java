@@ -40,7 +40,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             r.role as role
             FROM users u 
             JOIN role r on u.role_id = r.id
-            WHERE u.id= : id
+            WHERE u.id= ?1
             """, nativeQuery = true
     )
     Optional<UserProjection> findUserById(Long id);
@@ -57,7 +57,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             u.is_deleted as isDeleted       
             FROM users u
             JOIN role r on u.role_id=r.id 
-            WHERE u.id= : id
+            WHERE u.is_deleted = ?1
             """, nativeQuery = true
     )
     List<UserProjection> findAllUsers(Boolean isDelete);

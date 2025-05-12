@@ -8,9 +8,10 @@ import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.services.role.RoleService;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/role")
-public class RoleController implements SimpleCrud<Long, RoleDto,RoleDto,RoleDto> {
+public class RoleController implements SimpleCrud<Long, RoleDto, RoleDto, RoleDto> {
     private final RoleService roleService;
 
     public RoleController(RoleService roleService) {
@@ -26,7 +27,7 @@ public class RoleController implements SimpleCrud<Long, RoleDto,RoleDto,RoleDto>
     @Override
     @GetMapping("/{id}")
     public ApiResponse<RoleDto> get(@PathVariable Long id) {
-        return null;
+        return roleService.get(id);
     }
 
     @Override
@@ -42,12 +43,12 @@ public class RoleController implements SimpleCrud<Long, RoleDto,RoleDto,RoleDto>
     @Override
     @GetMapping("/all")
     public ApiResponse<List<RoleDto>> getAll() {
-        return null;
+        return roleService.getAll();
     }
 
     @Override
     @GetMapping
     public ApiResponse<List<RoleDto>> getAllPagination(Pageable pageable) {
-        return null;
+        return roleService.getAllPagination(pageable);
     }
 }
