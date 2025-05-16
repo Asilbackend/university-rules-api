@@ -1,9 +1,12 @@
 package uz.tuit.unirules.repository;
 
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import uz.tuit.unirules.entity.user.User;
 import uz.tuit.unirules.projections.UserProjection;
 
@@ -62,5 +65,28 @@ public interface UserRepository extends JpaRepository<User, Long> {
     )
     List<UserProjection> findAllUsers(Boolean isDelete);
     Optional<User> findByUsername(String name);
+
+    @Query(value = """
+    SELECT  
+        u.id,
+        u.firstname,
+        u.lastname,
+        u.email,
+        u.phone,
+        u.language,
+        u.passed_test as passedTest,
+        u.group_id as groupId,
+        r.role as role
+     FROM users u
+     JOIN role r ON u.role_id = r.id
+     WHERE u.is_deleted = false
+       AND u.group_id = :groupId
+    """,// pagination ishlatilganda countquery ishlatish majburiy chunki pagination nechta user borligini bilishi shart
+            countQuery = """
+    SELECT count(*) FROM users u
+     WHERE u.is_deleted = false AND u.group_id = :groupId
+    """,
+            nativeQuery = true) // param buyerda sqldagi groupId ni Param(groupid) ga ulash uchun.
+    Page<UserProjection> findUsersByGroupId(@Param("groupId") Long groupId, Pageable pageable);
 
 }

@@ -15,12 +15,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserController implements SimpleCrud<Long, CreateUserReqDto, UpdateUserReqDto,UserRespDto> {
-   private final   UserService userService;
+public class UserController implements SimpleCrud<Long, CreateUserReqDto, UpdateUserReqDto, UserRespDto> {
+    private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
+
     @Override
     @PostMapping
     public ApiResponse<UserRespDto> create(@RequestBody CreateUserReqDto createUserReqDto) {
@@ -36,7 +37,7 @@ public class UserController implements SimpleCrud<Long, CreateUserReqDto, Update
     @Override
     @PutMapping("/{id}")
     public ApiResponse<UserRespDto> update(@PathVariable(name = "id") Long entityId, @RequestBody UpdateUserReqDto updateUserReqDto) {
-        return userService.update(entityId,updateUserReqDto);
+        return userService.update(entityId, updateUserReqDto);
     }
 
     @Override
@@ -56,4 +57,10 @@ public class UserController implements SimpleCrud<Long, CreateUserReqDto, Update
     public ApiResponse<List<UserRespDto>> getAllPagination(@ParameterObject Pageable pageable) {
         return userService.getAllPagination(pageable);
     }
+
+    @GetMapping("/findByGroupId/{groupId}")
+    public ApiResponse<List<UserRespDto>> findUsersByGroupId( @PathVariable Long groupId, @ParameterObject Pageable pageable) {
+        return userService.findUsersByGroupId(groupId, pageable);
+    }
+
 }

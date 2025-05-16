@@ -1,5 +1,6 @@
 package uz.tuit.unirules.controller.faculty;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -58,5 +59,9 @@ public class GroupController implements
     @GetMapping
     public ApiResponse<List<GroupRespDto>> getAllPagination(Pageable pageable) {
         return groupService.getAllPagination(pageable);
+    }
+    @GetMapping("findAllGroups/{educationDirectionId}")
+    public ApiResponse<List<GroupRespDto>> findGroupsByEducationDirectionId(@PathVariable(value = "educationDirectionId") Long id, @ParameterObject Pageable pageable){
+        return groupService.getGroupsByEducationDirectionId(id,pageable);
     }
 }

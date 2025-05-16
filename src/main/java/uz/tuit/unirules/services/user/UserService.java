@@ -31,7 +31,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
     private final GroupService groupService;
     private final RoleService roleService;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper, GroupService groupService, DisciplineRuleService disciplineRuleService, AttachmentService attachmentService, RoleService roleService) {
+    public UserService(UserRepository userRepository, GroupService groupService, DisciplineRuleService disciplineRuleService, AttachmentService attachmentService, RoleService roleService) {
         this.userRepository = userRepository;
         this.groupService = groupService;
         this.roleService = roleService;
@@ -55,6 +55,8 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
                     .phone(createUserReqDto.phone())
                     .username(createUserReqDto.username())
                     .password(createUserReqDto.password())
+                    .group(group)
+                    .role(role)
                     .build();
             userRepository.save(user);
             UserRespDto respDto = new UserRespDto(
@@ -185,6 +187,28 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         );
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<List<UserRespDto>> findUsersByGroupId(Long groupId, Pageable pageable) {
+        Group group = groupService.findByGroupId(groupId); // bu faqat tekshirish uchun
+
+        Page<UserProjection> usersPage = userRepository.findUsersByGroupId(groupId, pageable);
+        List<UserRespDto> dtoList = usersPage.stream().map(user -> new UserRespDto(
+                user.getFirstname(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getLanguage(),
+                user.getPassedTest(),
+                user.getGroupId(),
+                user.getRole()
+        )).toList();
+        return new ApiResponse<>(
+                200,
+                "Users are found by group id = %s".formatted(groupId),
+                true,
+                dtoList
+        );
+    }
     public Page<User> findAllPage(Pageable pageable) {
         return userRepository.findAll(pageable);
     }

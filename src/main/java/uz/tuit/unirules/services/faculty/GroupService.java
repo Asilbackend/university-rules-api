@@ -120,6 +120,19 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
                 list
         );
     }
+    public ApiResponse<List<GroupRespDto>> getGroupsByEducationDirectionId(Long educationDirectionId,Pageable pageable){
+        // Education Direction ni olib kelamiz
+        EducationDirection educationDirection= educationDirectionService.findById(educationDirectionId);
+
+        Page<Group> groups = groupRepository.findGroupsByEducationDirectionId(educationDirectionId,pageable);
+        List<GroupRespDto> respDtoList = groups.map(groupMapper::toDto).stream().toList();
+        return new ApiResponse<>(
+                200,
+                "all groups by education direction id = %s".formatted(educationDirectionId),
+                true,
+                respDtoList
+        );
+    }
 
     public Page<Group> findAllPage(Pageable pageable) {
         return groupRepository.findAll(pageable);
