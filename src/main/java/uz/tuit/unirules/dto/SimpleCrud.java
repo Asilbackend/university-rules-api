@@ -2,6 +2,7 @@ package uz.tuit.unirules.dto;
 
 
 import org.springframework.data.domain.Pageable;
+import uz.tuit.unirules.dto.respond_dto.DisciplineRuleRespDto;
 
 import java.util.List;
 
@@ -17,4 +18,5 @@ public interface SimpleCrud<ID, CreateReqDto, UpdateReqDto, RespDto> {
     ApiResponse<List<RespDto>> getAll();
 
     ApiResponse<List<RespDto>> getAllPagination(Pageable pageable);
+
 }

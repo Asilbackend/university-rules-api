@@ -19,8 +19,7 @@ import uz.tuit.unirules.repository.faculty.FacultyRepository;
 import java.util.List;
 
 @Service
-public class EducationDirectionService implements
-        SimpleCrud<Long, CreateEducationDirectionReqDto, UpdateEducationDirectionReqDto, EducationDirectionRespDto> {
+public class EducationDirectionService {
     private final EducationDirectionRepository educationDirectionRepository;
     private final EducationDirectionMapper educationDirectionMapper;
     private final FacultyService facultyService;
@@ -32,7 +31,6 @@ public class EducationDirectionService implements
         this.facultyService = facultyService;
     }
 
-    @Override
     @Transactional
     public ApiResponse<EducationDirectionRespDto> create(CreateEducationDirectionReqDto createEducationReqDto) {
         // todo: Facultyni olish
@@ -53,7 +51,6 @@ public class EducationDirectionService implements
         throw new RuntimeException("This Education direction is already exist");
     }
 
-    @Override
     public ApiResponse<EducationDirectionRespDto> get(Long entityId) {
         EducationDirection educationDirection = findById(entityId);
         return new ApiResponse<>(
@@ -70,12 +67,11 @@ public class EducationDirectionService implements
 
     }
 
-    @Override
     @Transactional
     public ApiResponse<EducationDirectionRespDto> update(Long entityId,
                                                          UpdateEducationDirectionReqDto updateEducationReqDto) {
         EducationDirection educationDirection = findById(entityId);
-        Faculty faculty=facultyService.findById(updateEducationReqDto.facultyId());
+        Faculty faculty = facultyService.findById(updateEducationReqDto.facultyId());
         educationDirection.setName(updateEducationReqDto.name());
         educationDirection.setFaculty(faculty);
         educationDirectionRepository.save(educationDirection);
@@ -87,7 +83,6 @@ public class EducationDirectionService implements
         );
     }
 
-    @Override
     @Transactional
     public ApiResponse<EducationDirectionRespDto> delete(Long entityId) {
         educationDirectionRepository.delete(findById(entityId));
@@ -99,7 +94,6 @@ public class EducationDirectionService implements
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<EducationDirectionRespDto>> getAll() {
         return new ApiResponse<>(
@@ -110,14 +104,15 @@ public class EducationDirectionService implements
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public ApiResponse<List<EducationDirectionRespDto>> getAllPagination(Pageable pageable) {
+    public ApiResponse<Page<EducationDirectionRespDto>> getAllPagination(Pageable pageable) {
+        Page<EducationDirection> educationDirectionPage = educationDirectionRepository.findAllByIsDeletedFalse(pageable);
+        Page<EducationDirectionRespDto> dtoPage = educationDirectionPage.map(educationDirectionMapper::toDto);
         return new ApiResponse<>(
                 200,
                 "hamma education directions page",
                 true,
-                findAllPage(pageable).map(educationDirectionMapper::toDto).toList()
+                dtoPage
         );
     }
 

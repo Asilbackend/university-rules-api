@@ -1,5 +1,6 @@
 package uz.tuit.unirules.controller.faculty;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,27 +16,23 @@ import java.util.List;
 @RestController
 @Validated
 @RequestMapping("/api/edu-direction")
-public class EducationDirectionController implements
-        SimpleCrud<Long, CreateEducationDirectionReqDto, UpdateEducationDirectionReqDto, EducationDirectionRespDto> {
+public class EducationDirectionController {
     private final EducationDirectionService educationDirectionService;
 
     public EducationDirectionController(EducationDirectionService educationDirectionService) {
         this.educationDirectionService = educationDirectionService;
     }
 
-    @Override
     @PostMapping
     public ApiResponse<EducationDirectionRespDto> create(@RequestBody CreateEducationDirectionReqDto createEducationReqDto) {
         return educationDirectionService.create(createEducationReqDto);
     }
 
-    @Override
     @GetMapping("/{id}")
     public ApiResponse<EducationDirectionRespDto> get(@PathVariable(value = "id") Long entityId) {
         return educationDirectionService.get(entityId);
     }
 
-    @Override
     @PutMapping("/{id}")
     public ApiResponse<EducationDirectionRespDto> update(@PathVariable(value = "id") Long entityId,
                                                          @RequestBody UpdateEducationDirectionReqDto updateEducationReqDto) {
@@ -43,21 +40,18 @@ public class EducationDirectionController implements
         return educationDirectionService.update(entityId, updateEducationReqDto);
     }
 
-    @Override
     @DeleteMapping("/{id}")
     public ApiResponse<EducationDirectionRespDto> delete(@PathVariable(value = "id") Long entityId) {
         return educationDirectionService.delete(entityId);
     }
 
-    @Override
     @GetMapping("/all")
     public ApiResponse<List<EducationDirectionRespDto>> getAll() {
         return educationDirectionService.getAll();
     }
 
-    @Override
     @GetMapping
-    public ApiResponse<List<EducationDirectionRespDto>> getAllPagination(Pageable pageable) {
+    public ApiResponse<Page<EducationDirectionRespDto>> getAllPagination(Pageable pageable) {
         return educationDirectionService.getAllPagination(pageable);
     }
 }

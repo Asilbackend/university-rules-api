@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUserReqDto, UserRespDto> {
+public class UserService {
     private final UserRepository userRepository;
     private final GroupService groupService;
     private final RoleService roleService;
@@ -37,7 +37,6 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         this.roleService = roleService;
     }
 
-    @Override
     @Transactional
     public ApiResponse<UserRespDto> create(CreateUserReqDto createUserReqDto) {
         if (!createUserReqDto.rePassword().equals(createUserReqDto.password())) {
@@ -70,7 +69,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
                     role.getRole());
             return new ApiResponse<>(
                     201,
-                    "Foydalanuvchi muvaffaqiyatli yaratildi",
+                    "user is saved successfully",
                     true,
                     respDto);
         } else {
@@ -79,7 +78,6 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
     }
 
 
-    @Override
     public ApiResponse<UserRespDto> get(Long entityId) {
         UserProjection userProjection = userRepository.findUserById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -87,7 +85,7 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         UserRespDto dto = makeUserRespDtoFromUserProjection(userProjection);
         return new ApiResponse<>(
                 200,
-                "Foydalanuvchi topildi",
+                "user is found successfully",
                 true,
                 dto
         );
@@ -110,7 +108,6 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         return optionalUser.orElseThrow(() -> new EntityNotFoundException("user not found"));
     }
 
-    @Override
     @Transactional
     public ApiResponse<UserRespDto> update(Long entityId, UpdateUserReqDto updateUserReqDto) {
         Group group = groupService.findByGroupId(updateUserReqDto.groupId());
@@ -129,13 +126,12 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         }
         return new ApiResponse<>(
                 204,
-                "userning malumotlari muvaffaqiyatli update boldi",
+                "user's information are updated successfully",
                 true,
                 null
         );
     }
 
-    @Override
     @Transactional
     public ApiResponse<UserRespDto> delete(Long entityId) {
         User user = findByUserId(entityId);
@@ -150,7 +146,6 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<UserRespDto>> getAll() {
         List<UserRespDto> userRespDtoList = userRepository.findAllUsers(false).stream()
@@ -163,27 +158,15 @@ public class UserService implements SimpleCrud<Long, CreateUserReqDto, UpdateUse
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public ApiResponse<List<UserRespDto>> getAllPagination(Pageable pageable) {
-        Page<User> allPage = findAllPage(pageable);
-        List<User> userList = allPage.getContent().stream().filter(
-                user -> user.getIsDeleted().equals(false)).toList();
-        List<UserRespDto> dtoList = new ArrayList<>();
-        userList.forEach(user -> dtoList.add(new UserRespDto(
-                user.getFirstname(),
-                user.getLastname(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getLanguage(),
-                user.isPassedTest(),
-                user.getGroup() == null ? null : user.getGroup().getId(),
-                user.getRole().getAuthority())));
+    public ApiResponse<Page<UserRespDto>> getAllPagination(Pageable pageable) {
+        Page<UserProjection> projections = userRepository.findAllUsersPages(pageable);
+        Page<UserRespDto> dtoPage = projections.map(UserService::makeUserRespDtoFromUserProjection);
         return new ApiResponse<>(
                 200,
                 "all users pages",
                 true,
-                dtoList
+                dtoPage
         );
     }
 

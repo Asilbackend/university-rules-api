@@ -25,4 +25,6 @@ public interface GroupRepository extends JpaRepository<Group,Long> {
              AND g.education_direction_id = :educationDirectionId
             """,nativeQuery = true)
     Page<Group> findGroupsByEducationDirectionId(@Param("educationDirectionId") Long educationDirectionId, Pageable pageable);
+
+    Page<Group> findAllByIsDeletedFalse(Pageable pageable);
 }

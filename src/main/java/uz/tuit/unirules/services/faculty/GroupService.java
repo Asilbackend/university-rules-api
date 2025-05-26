@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateGroupReqDto, GroupRespDto> {
+public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
     private final EducationDirectionService educationDirectionService;
@@ -31,7 +31,6 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
 
     }
 
-    @Override
     @Transactional
     public ApiResponse<GroupRespDto> create(CreateGroupReqDto createGroupReqDto) {
         // education direction olish
@@ -53,7 +52,6 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
         }
     }
 
-    @Override
     public ApiResponse<GroupRespDto> get(Long entityId) {
         Group group = findByGroupId(entityId);
         GroupRespDto respDto = groupMapper.toDto(group);
@@ -70,7 +68,6 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
         return optionalGroup.orElseThrow(() -> new EntityNotFoundException("group is not found"));
     }
 
-    @Override
     @Transactional
     public ApiResponse<GroupRespDto> update(Long entityId, UpdateGroupReqDto updateGroupReqDto) {
         Group group = findByGroupId(entityId);
@@ -84,7 +81,6 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
         );
     }
 
-    @Override
     @Transactional
     public ApiResponse<GroupRespDto> delete(Long entityId) {
         Group group = findByGroupId(entityId);
@@ -97,7 +93,6 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<GroupRespDto>> getAll() {
         return new ApiResponse<>(
@@ -108,23 +103,23 @@ public class GroupService implements SimpleCrud<Long, CreateGroupReqDto, UpdateG
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public ApiResponse<List<GroupRespDto>> getAllPagination(Pageable pageable) {
-        Page<Group> allPage = findAllPage(pageable);
-        List<GroupRespDto> list = allPage.map(groupMapper::toDto).toList();
+    public ApiResponse<Page<GroupRespDto>> getAllPagination(Pageable pageable) {
+        Page<Group> allPage = groupRepository.findAllByIsDeletedFalse(pageable);
+        Page<GroupRespDto> dtoPage = allPage.map(groupMapper::toDto);
         return new ApiResponse<>(
                 200,
                 "hamma group pages",
                 true,
-                list
+                dtoPage
         );
     }
-    public ApiResponse<List<GroupRespDto>> getGroupsByEducationDirectionId(Long educationDirectionId,Pageable pageable){
-        // Education Direction ni olib kelamiz
-        EducationDirection educationDirection= educationDirectionService.findById(educationDirectionId);
 
-        Page<Group> groups = groupRepository.findGroupsByEducationDirectionId(educationDirectionId,pageable);
+    public ApiResponse<List<GroupRespDto>> getGroupsByEducationDirectionId(Long educationDirectionId, Pageable pageable) {
+        // Education Direction ni olib kelamiz
+        EducationDirection educationDirection = educationDirectionService.findById(educationDirectionId);
+
+        Page<Group> groups = groupRepository.findGroupsByEducationDirectionId(educationDirectionId, pageable);
         List<GroupRespDto> respDtoList = groups.map(groupMapper::toDto).stream().toList();
         return new ApiResponse<>(
                 200,

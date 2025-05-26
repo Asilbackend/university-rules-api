@@ -19,8 +19,7 @@ import uz.tuit.unirules.services.user.UserService;
 import java.util.List;
 
 @Service
-public class NotificationService implements
-        SimpleCrud<Long, CreateNotificationReqDto, UpdateNotificationReqDto, NotificationRespDto> {
+public class NotificationService {
     private final NotificationMapper mapper;
     private final NotificationRepository repository;
     private final UserService userService;
@@ -31,7 +30,6 @@ public class NotificationService implements
         this.userService = userService;
     }
 
-    @Override
     @Transactional
     public ApiResponse<NotificationRespDto> create(CreateNotificationReqDto createNotificationReqDto) {
         //user ob kelish
@@ -52,7 +50,6 @@ public class NotificationService implements
         );
     }
 
-    @Override
     public ApiResponse<NotificationRespDto> get(Long entityId) {
         Notification notification = findById(entityId);
         return new ApiResponse<>(
@@ -68,7 +65,6 @@ public class NotificationService implements
                 .orElseThrow(() -> new EntityNotFoundException("notification is not found by id"));
     }
 
-    @Override
     public ApiResponse<NotificationRespDto> update(Long entityId,
                                                    UpdateNotificationReqDto updateNotificationReqDto) {
         Notification notification = findById(entityId);
@@ -84,7 +80,6 @@ public class NotificationService implements
         );
     }
 
-    @Override
     public ApiResponse<NotificationRespDto> delete(Long entityId) {
         Notification notification = findById(entityId);
         repository.delete(notification);
@@ -96,7 +91,6 @@ public class NotificationService implements
         );
     }
 
-    @Override
     public ApiResponse<List<NotificationRespDto>> getAll() {
         return new ApiResponse<>(
                 200,
@@ -106,13 +100,14 @@ public class NotificationService implements
         );
     }
 
-    @Override
-    public ApiResponse<List<NotificationRespDto>> getAllPagination(Pageable pageable) {
+    public ApiResponse<Page<NotificationRespDto>> getAllPagination(Pageable pageable) {
+        Page<Notification> notificationPage = repository.findAllByIsDeletedFalse(pageable);
+        Page<NotificationRespDto> dtoPage = notificationPage.map(mapper::toDto);
         return new ApiResponse<>(
                 200,
                 "all notifications page",
                 true,
-                findAllPage(pageable).map(mapper::toDto).toList()
+                dtoPage
         );
     }
 

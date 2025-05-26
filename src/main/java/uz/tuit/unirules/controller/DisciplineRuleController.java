@@ -1,6 +1,7 @@
 package uz.tuit.unirules.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,51 +19,42 @@ import java.util.List;
 // requestmapping annotantioni spring frameworkda https sorovlarni klasslarga yoki metodlarga boglash uchun ishlatiladi. bu annotatsiay orqali qaysi url qaysi klass yoki metodga tegishli ekanini belgilanadi. bu annotatsiya klasdagi barcha metodlar uchun asosiy yol bolib xizmat qiladi.
 @RequestMapping("/api/discipline-rule")
 @Tag(name = "DisciplineRule Management ")
-public class DisciplineRuleController implements
-        SimpleCrud<Long, CreateDisciplineRuleReqDto, UpdateDisciplineRuleReqDto, DisciplineRuleRespDto> {
+public class DisciplineRuleController {
     private final DisciplineRuleService disciplineRuleService;
 
     public DisciplineRuleController(DisciplineRuleService disciplineRuleService) {
         this.disciplineRuleService = disciplineRuleService;
     }
     //@Validated bu validation beani uchun yani obyektlarni tekshirish uchun ishlatiladi.Spring frameworkdan kelgan
-   //@RequestBody bu user malumotni json korinishida Post yoki Put methodlari orqali yuboradigan bolsa shundagina @RequestBody qoyiladi.
-    @Override
+   //@RequestBody bu user malumotni json korinishida Post yoki Put methodlari orqali yuboradigan bolsa shundagina @RequestBody qoyiladi
     @PostMapping//yangi malumot qoshish uchun create uchun ishlatiladi.
     public ApiResponse<DisciplineRuleRespDto> create(@Validated @RequestBody CreateDisciplineRuleReqDto createDisciplineRuleReqDto) {
         return disciplineRuleService.create(createDisciplineRuleReqDto);
     }
      //@RequestParam bu agar user malumotni key value shaklida yuboradigan bolsa u holda bu anotatsiyadan foydalaniladi. agar 2 tadan koproq ozgaruvchi boldadigan bolsa restfull Api da requestParam tezroq va toza Pathvariablega nisbatan.
-    //@pathvariable bu springda ishlatiladigan anotatsiya bolib url yolida berilgan ozgaruvchini(parametr) tutib olish uchun ishlatiladi.
-    @Override
+    //@pathvariable bu springda ishlatiladigan anotatsiya bolib url yolida berilgan ozgaruvchini(parametr) tutib olish uchun ishlatiladi
     @GetMapping("/{id}")// malumotni olish(read uchun) ishlatiladi
     public ApiResponse<DisciplineRuleRespDto> get(@PathVariable(value = "id") Long entityId) {
         return disciplineRuleService.get(entityId);
     }
 
-
-    @Override
     @PutMapping("/{id}")// malumotni yangilash uchun ishlatiladi updae uchun
     public ApiResponse<DisciplineRuleRespDto> update(@PathVariable(value = "id") Long entityId,
                                                      @Validated @RequestBody UpdateDisciplineRuleReqDto updateDisciplineRuleReqDto) {
         return disciplineRuleService.update(entityId, updateDisciplineRuleReqDto);
     }
-
-    @Override
     @DeleteMapping("/{id}")// malumotni ochirish uchun delete uchun ishlatiladi
     public ApiResponse<DisciplineRuleRespDto> delete(@PathVariable(value = "id") Long entityId) {
         return disciplineRuleService.delete(entityId);
     }
-
-    @Override
     @GetMapping("/all")
     public ApiResponse<List<DisciplineRuleRespDto>> getAll() {
         return disciplineRuleService.getAll();
     }
 
-    @Override
     @GetMapping
-    public ApiResponse<List<DisciplineRuleRespDto>> getAllPagination(Pageable pageable) {
-        return disciplineRuleService.getAllPagination(pageable);
+    public ApiResponse<Page<DisciplineRuleRespDto>> findAllPagination(Pageable pageable) {
+        return disciplineRuleService.findAllPages(pageable);
     }
+
 }

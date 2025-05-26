@@ -1,5 +1,6 @@
 package uz.tuit.unirules.controller;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,48 +16,41 @@ import java.util.List;
 @RestController
 @Validated
 @RequestMapping("/api/recommended-module")
-public class RecommendedModuleController implements
-        SimpleCrud<Long, CreateRecommendedModuleReqDto, UpdateRecommendedModuleReqDto, RecommendedModuleRespDto> {
+public class RecommendedModuleController {
     private final RecommendedModuleService service;
 
     public RecommendedModuleController(RecommendedModuleService service) {
         this.service = service;
     }
 
-    @Override
     @PostMapping
     public ApiResponse<RecommendedModuleRespDto> create(@RequestBody CreateRecommendedModuleReqDto createRecommendedModuleReqDto) {
         return service.create(createRecommendedModuleReqDto);
     }
 
-    @Override
     @GetMapping("/{id}")
-    public ApiResponse<RecommendedModuleRespDto> get(@PathVariable(value = "id") Long entityId) {
-        return service.get(entityId);
+    public ApiResponse<RecommendedModuleRespDto> get(@PathVariable Long id) {
+        return service.get(id);
     }
 
-    @Override
     @PutMapping("/{id}")
-    public ApiResponse<RecommendedModuleRespDto> update(@PathVariable(value = "id") Long entityId,
+    public ApiResponse<RecommendedModuleRespDto> update(@PathVariable Long id,
                                                         @RequestBody UpdateRecommendedModuleReqDto updateRecommendedModuleReqDto) {
-        return service.update(entityId, updateRecommendedModuleReqDto);
+        return service.update(id, updateRecommendedModuleReqDto);
     }
 
-    @Override
     @DeleteMapping("/{id}")
-    public ApiResponse<RecommendedModuleRespDto> delete(@PathVariable(value = "id") Long entityId) {
-        return service.delete(entityId);
+    public ApiResponse<RecommendedModuleRespDto> delete(@PathVariable Long id) {
+        return service.delete(id);
     }
 
-    @Override
     @GetMapping("all")
     public ApiResponse<List<RecommendedModuleRespDto>> getAll() {
         return service.getAll();
     }
 
-    @Override
     @GetMapping
-    public ApiResponse<List<RecommendedModuleRespDto>> getAllPagination(Pageable pageable) {
+    public ApiResponse<Page<RecommendedModuleRespDto>> getAllPagination(Pageable pageable) {
         return service.getAllPagination(pageable);
     }
 }

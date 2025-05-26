@@ -21,9 +21,7 @@ import uz.tuit.unirules.services.user.UserService;
 import java.util.List;
 
 @Service
-public class RecommendedModuleService implements
-        SimpleCrud<Long, CreateRecommendedModuleReqDto,
-                UpdateRecommendedModuleReqDto, RecommendedModuleRespDto> {
+public class RecommendedModuleService  {
     private final RecommendedModuleRepository recommendedModuleRepository;
     private final RecommendedModuleMapper recommendedModuleMapper;
     private final UserService userService;
@@ -37,7 +35,6 @@ public class RecommendedModuleService implements
         this.moduleService = moduleService;
     }
 
-    @Override
     @Transactional
     public ApiResponse<RecommendedModuleRespDto> create(CreateRecommendedModuleReqDto createRecommendedModuleReqDto) {
         //module ni olib keladi
@@ -58,7 +55,6 @@ public class RecommendedModuleService implements
         );
     }
 
-    @Override
     public ApiResponse<RecommendedModuleRespDto> get(Long entityId) {
         RecommendedModule recommendedModule = findById(entityId);
         return new ApiResponse<>(
@@ -74,7 +70,6 @@ public class RecommendedModuleService implements
                 .orElseThrow(() -> new EntityNotFoundException(" recommended module does not exist"));
     }
 
-    @Override
     @Transactional
     public ApiResponse<RecommendedModuleRespDto> update(Long entityId, UpdateRecommendedModuleReqDto updateRecommendedModuleReqDto) {
         RecommendedModule recommendedModule = findById(entityId);
@@ -88,7 +83,6 @@ public class RecommendedModuleService implements
         );
     }
 
-    @Override
     @Transactional
     public ApiResponse<RecommendedModuleRespDto> delete(Long entityId) {
         RecommendedModule recommendedModule = findById(entityId);
@@ -101,7 +95,6 @@ public class RecommendedModuleService implements
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<RecommendedModuleRespDto>> getAll() {
         return new ApiResponse<>(
@@ -114,14 +107,15 @@ public class RecommendedModuleService implements
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public ApiResponse<List<RecommendedModuleRespDto>> getAllPagination(Pageable pageable) {
+    public ApiResponse<Page<RecommendedModuleRespDto>> getAllPagination(Pageable pageable) {
+        Page<RecommendedModule> recommendedModulePage = recommendedModuleRepository.findAllByIsDeletedFalse(pageable);
         return new ApiResponse<>(
                 200,
                 "all recommended modules as pages",
                 true,
-                findAllPage(pageable).map(recommendedModuleMapper::toDto).toList()
+                recommendedModulePage.map(recommendedModuleMapper::toDto)
+
         );
     }
 

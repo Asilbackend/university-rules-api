@@ -19,25 +19,9 @@ public class RoleController implements SimpleCrud<Long, RoleDto, RoleDto, RoleDt
     }
 
     @Override
-    @PostMapping
-    public ApiResponse<RoleDto> create(@RequestBody RoleDto roleDto) {
-        return roleService.create(roleDto);
-    }
-
-    @Override
     @GetMapping("/{id}")
     public ApiResponse<RoleDto> get(@PathVariable Long id) {
         return roleService.get(id);
-    }
-
-    @Override
-    public ApiResponse<RoleDto> update(Long entityId, RoleDto roleDto) {
-        return null;
-    }
-
-    @Override
-    public ApiResponse<RoleDto> delete(Long entityId) {
-        return null;
     }
 
     @Override
@@ -50,5 +34,20 @@ public class RoleController implements SimpleCrud<Long, RoleDto, RoleDto, RoleDt
     @GetMapping
     public ApiResponse<List<RoleDto>> getAllPagination(Pageable pageable) {
         return roleService.getAllPagination(pageable);
+    }
+
+    @Override
+    public ApiResponse<RoleDto> create(RoleDto roleDto) {
+        return null;
+    }
+
+    @Override
+    public ApiResponse<RoleDto> update(Long entityId, RoleDto roleDto) {
+        return null;
+    }
+
+    @Override
+    public ApiResponse<RoleDto> delete(Long entityId) {
+        return null;
     }
 }

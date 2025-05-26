@@ -16,21 +16,22 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = """
-            SELECT
-            u.id as id,
-            u.firstname as firstname,
-            u.lastname as lastname,
-            u.email as email,
-            u.phone as phone,
-            u.passed_test as passedTest,
-            u.group_id as groupId,
-            r.role as role
-            FROM users u
-            JOIN role r ON u.role_id = r.id
-        WHERE u.username = ?1
-        """, nativeQuery = true
+                SELECT
+                u.id as id,
+                u.firstname as firstname,
+                u.lastname as lastname,
+                u.email as email,
+                u.phone as phone,
+                u.passed_test as passedTest,
+                u.group_id as groupId,
+                r.role as role
+                FROM users u
+                JOIN role r ON u.role_id = r.id
+            WHERE u.username = ?1
+            """, nativeQuery = true
     )
     Optional<UserProjection> findUserProjectionByUsername(String username);
+
     @Query(value = """ 
             SELECT
             u.id as id,
@@ -64,29 +65,52 @@ public interface UserRepository extends JpaRepository<User, Long> {
             """, nativeQuery = true
     )
     List<UserProjection> findAllUsers(Boolean isDelete);
+
     Optional<User> findByUsername(String name);
 
     @Query(value = """
-    SELECT  
-        u.id,
-        u.firstname,
-        u.lastname,
-        u.email,
-        u.phone,
-        u.language,
-        u.passed_test as passedTest,
-        u.group_id as groupId,
-        r.role as role
-     FROM users u
-     JOIN role r ON u.role_id = r.id
-     WHERE u.is_deleted = false
-       AND u.group_id = :groupId
-    """,// pagination ishlatilganda countquery ishlatish majburiy chunki pagination nechta user borligini bilishi shart
+            SELECT  
+                u.id,
+                u.firstname,
+                u.lastname,
+                u.email,
+                u.phone,
+                u.language,
+                u.passed_test as passedTest,
+                u.group_id as groupId,
+                r.role as role
+             FROM users u
+             JOIN role r ON u.role_id = r.id
+             WHERE u.is_deleted = false
+               AND u.group_id = :groupId
+            """,// pagination ishlatilganda countquery ishlatish majburiy chunki pagination nechta user borligini bilishi shart
             countQuery = """
-    SELECT count(*) FROM users u
-     WHERE u.is_deleted = false AND u.group_id = :groupId
-    """,
-            nativeQuery = true) // param buyerda sqldagi groupId ni Param(groupid) ga ulash uchun.
+                    SELECT count(*) FROM users u
+                     WHERE u.is_deleted = false AND u.group_id = :groupId
+                    """,
+            nativeQuery = true)
+        // param buyerda sqldagi groupId ni Param(groupid) ga ulash uchun.
     Page<UserProjection> findUsersByGroupId(@Param("groupId") Long groupId, Pageable pageable);
+
+    @Query(value = """
+            SELECT  
+                u.id,
+                u.firstname,
+                u.lastname,
+                u.email,
+                u.phone,
+                u.language,
+                u.passed_test as passedTest,
+                u.group_id as groupId,
+                r.role as role
+             FROM users u
+             JOIN role r ON u.role_id = r.id
+             WHERE u.is_deleted = false
+            """, countQuery = """
+            SELECT count(*) FROM users u
+             WHERE u.is_deleted = false
+            """,
+            nativeQuery = true)
+    Page<UserProjection> findAllUsersPages(Pageable pageable);
 
 }

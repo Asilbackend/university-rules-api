@@ -17,12 +17,10 @@ import uz.tuit.unirules.projections.DisciplineRuleProjection;
 import uz.tuit.unirules.repository.DisciplineRuleRepository;
 import uz.tuit.unirules.services.attachment.AttachmentService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class DisciplineRuleService implements
-        SimpleCrud<Long, CreateDisciplineRuleReqDto, UpdateDisciplineRuleReqDto, DisciplineRuleRespDto> {
+public class DisciplineRuleService {
     private final DisciplineRuleRepository disciplineRuleRepository;
     private final DisciplineRuleMapper disciplineRuleMapper;
     private final AttachmentService attachmentService;
@@ -33,7 +31,6 @@ public class DisciplineRuleService implements
         this.attachmentService = attachmentService;
     }
 
-    @Override
     @Transactional
     public ApiResponse<DisciplineRuleRespDto> create(CreateDisciplineRuleReqDto createDisciplineRuleReqDto) {
         Attachment attachment = attachmentService.findById(createDisciplineRuleReqDto.attachmentId());
@@ -50,7 +47,6 @@ public class DisciplineRuleService implements
                 disciplineRuleMapper.toDto(disciplineRule));
     }
 
-    @Override
     public ApiResponse<DisciplineRuleRespDto> get(Long entityId) {
         DisciplineRuleProjection disciplineRuleProjection = disciplineRuleRepository
                 .findDisciplineRuleById(entityId).
@@ -79,7 +75,6 @@ public class DisciplineRuleService implements
                         "Discipline Rule is not found by id = %s".formatted(entityId)));
     }
 
-    @Override
     @Transactional
     public ApiResponse<DisciplineRuleRespDto> update(
             Long entityId, UpdateDisciplineRuleReqDto updateDisciplineRuleReqDto) {
@@ -103,7 +98,6 @@ public class DisciplineRuleService implements
         );
     }
 
-    @Override
     @Transactional
     public ApiResponse<DisciplineRuleRespDto> delete(Long entityId) {
         DisciplineRule disciplineRule = findDisciplineRuleById(entityId);
@@ -117,7 +111,6 @@ public class DisciplineRuleService implements
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<DisciplineRuleRespDto>> getAll() {
         List<DisciplineRuleRespDto> respDtoList = disciplineRuleRepository
@@ -132,30 +125,15 @@ public class DisciplineRuleService implements
         );
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public ApiResponse<List<DisciplineRuleRespDto>> getAllPagination(Pageable pageable) {
-        // discipline rules hammasi pagega keladi
-        Page<DisciplineRule> disciplineRulePage = disciplineRuleRepository.findAll(pageable);
-
-        // discipline rule isdeleted false bolganlarni hammasi listga yigiladi
-        List<DisciplineRule> disciplineRuleList = disciplineRulePage.getContent().stream().filter(
-                disciplineRule -> disciplineRule.getIsDeleted().equals(false)).toList();
-
-        // disciplinerulerespdto list ochiladi
-        List<DisciplineRuleRespDto> respDtoList = new ArrayList<>();
-
-        // discipline rule list discipline rule respdto ga convert boladi.
-        disciplineRuleList.forEach(disciplineRule -> respDtoList.add(new DisciplineRuleRespDto(
-                disciplineRule.getTitle(),
-                disciplineRule.getBody(),
-                disciplineRule.getAttachment().getId()
-        )));
+    public ApiResponse<Page<DisciplineRuleRespDto>> findAllPages(Pageable pageable) {
+        Page<DisciplineRuleProjection> projectionPage = disciplineRuleRepository.findDisciplineRulePages(pageable);
+        Page<DisciplineRuleRespDto> dtoPage = projectionPage.map(DisciplineRuleService::makeDisciplineRuleFromProjection);
         return new ApiResponse<>(
                 200,
-                "all discipline rules pages",
+                "all pages come",
                 true,
-                findAllPage(pageable).map(disciplineRuleMapper::toDto).toList()
+                dtoPage
         );
     }
 

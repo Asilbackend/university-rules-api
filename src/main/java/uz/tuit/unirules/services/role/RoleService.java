@@ -25,22 +25,8 @@ public class RoleService implements SimpleCrud<Long, RoleDto, RoleDto, RoleDto> 
     }
 
     @Override
-    @Transactional
     public ApiResponse<RoleDto> create(RoleDto roleDto) {
-        Role role = new Role();
-        try {
-            role.setRole(roleDto.role());
-            roleRepository.save(role);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        RoleDto dto = new RoleDto(role.getRole());
-        return new ApiResponse<>(
-                201,
-                "role is created",
-                true,
-                dto
-        );
+    return null;
     }
 
     @Override
