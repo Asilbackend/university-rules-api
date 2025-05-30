@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
-
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Getter
 @Setter
 @Entity
@@ -18,7 +18,7 @@ public class QuestionOption extends BaseEntity {
     private Question question;
     private String result;
     @JsonIgnore
-    private boolean isCorrect;
+    private Boolean isCorrect;
     @Builder.Default
     private Boolean isDeleted = false;
 }

@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
-import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.CreateDisciplineRuleReqDto;
 import uz.tuit.unirules.dto.request_dto.UpdateDisciplineRuleReqDto;
 import uz.tuit.unirules.dto.respond_dto.DisciplineRuleRespDto;
@@ -37,7 +36,6 @@ public class DisciplineRuleController {
     public ApiResponse<DisciplineRuleRespDto> get(@PathVariable(value = "id") Long entityId) {
         return disciplineRuleService.get(entityId);
     }
-
     @PutMapping("/{id}")// malumotni yangilash uchun ishlatiladi updae uchun
     public ApiResponse<DisciplineRuleRespDto> update(@PathVariable(value = "id") Long entityId,
                                                      @Validated @RequestBody UpdateDisciplineRuleReqDto updateDisciplineRuleReqDto) {

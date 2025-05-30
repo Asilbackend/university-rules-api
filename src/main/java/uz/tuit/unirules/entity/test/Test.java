@@ -1,11 +1,9 @@
 package uz.tuit.unirules.entity.test;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
+import uz.tuit.unirules.entity.modul.Module;
 
 import java.util.List;
 
@@ -15,7 +13,9 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-public class Test extends BaseEntity {
+public class  Test extends BaseEntity {
+    @ManyToOne
+    private Module module;
     private String title;
     private String description;
     @Builder.Default
