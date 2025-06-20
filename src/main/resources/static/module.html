@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul Sahifasi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .module-header {
+            background: linear-gradient(135deg, #007bff, #00b7eb);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .module-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .module-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .content-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .content-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        .content-media {
+            margin-bottom: 20px;
+        }
+
+        .content-media video,
+        .content-media img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .content-body {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .rating-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .rating-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .star {
+            font-size: 1.5rem;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star.filled {
+            color: #f39c12;
+        }
+
+        .comment-box {
+            width: 100%;
+            min-height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        .submit-btn, .details-btn, .test-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+
+        .submit-btn:hover, .details-btn:hover, .test-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .progress-bar {
+            margin-top: 10px;
+            background: #eee;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: #28a745;
+            width: 0;
+            transition: width 0.3s;
+        }
+
+        .additional-files {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .additional-files.show {
+            display: block;
+        }
+
+        .file-item {
+            margin-bottom: 15px;
+        }
+
+        .file-item video,
+        .file-item img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .file-item a {
+            display: inline-block;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .file-item a:hover {
+            text-decoration: underline;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .module-header h1 {
+                font-size: 2rem;
+            }
+
+            .module-header p {
+                font-size: 1rem;
+            }
+
+            .content-card h3 {
+                font-size: 1.5rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="module-header">
+        <h1>Web Dasturlash Asoslari</h1>
+        <p>Bu modulda HTML, CSS va JavaScript yordamida zamonaviy veb-saytlarni yaratishni o'rganasiz. Amaliy mashqlar va real loyihalar orqali tajriba orttirasiz.</p>
+    </div>
+
+    <div class="content-list">
+        <!-- Content 1 -->
+        <div class="content-card">
+            <h3>1. HTML Kirish</h3>
+            <div class="content-media">
+                <video controls>
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    Video yuklanmadi.
+                </video>
+            </div>
+            <div class="content-body">
+                Bu darsda HTML tuzilishi, teglar va asosiy elementlar haqida ma'lumot beriladi. Siz o'zingizning birinchi veb-sahifangizni yaratishni boshlaysiz.
+            </div>
+            <div class="progress-bar">
+                <div class="progress" style="width: 60%;"></div>
+            </div>
+            <div class="additional-files">
+                <div class="file-item">
+                    <video controls>
+                        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                        Video yuklanmadi.
+                    </video>
+                </div>
+                <div class="file-item">
+                    <img src="https://images.unsplash.com/photo-1516321310764-9e6d7c6668e6" alt="HTML diagrammasi">
+                </div>
+                <div class="file-item">
+                    <img src="https://images.unsplash.com/photo-1543968996-ee822b8176ba" alt="HTML kodi">
+                </div>
+                <div class="file-item">
+                    <a href="https://www.w3.org/TR/html52/full-specification.pdf" target="_blank">HTML5 Spetsifikatsiyasi (PDF)</a>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="details-btn">Batafsil</button>
+                <button class="test-btn">Test ishlash</button>
+            </div>
+            <div class="rating-section">
+                <h4>Baho bering</h4>
+                <div class="stars" data-content-id="1">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <textarea class="comment-box" placeholder="Izoh qoldiring (3 yulduzdan kam bo'lsa majburiy)"></textarea>
+                <button class="submit-btn">Yuborish</button>
+            </div>
+        </div>
+
+        <!-- Content 2 -->
+        <div class="content-card">
+            <h3>2. CSS Stil berish</h3>
+            <div class="content-media">
+                <video controls>
+                    <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
+                    Video yuklanmadi.
+                </video>
+            </div>
+            <div class="content-body">
+                CSS yordamida veb-sahifalarga chiroyli ko'rinish berishni o'rganasiz. Ranglar, shriftlar va layoutlar bilan ishlashni amalda sinab ko'rasiz.
+            </div>
+            <div class="progress-bar">
+                <div class="progress" style="width: 20%;"></div>
+            </div>
+            <div class="additional-files">
+                <div class="file-item">
+                    <img src="https://images.unsplash.com/photo-1516321310764-9e6d7c6668e6" alt="CSS diagrammasi">
+                </div>
+                <div class="file-item">
+                    <a href="https://www.w3.org/TR/css-2023/CSS3.pdf" target="_blank">CSS3 Yo'riqnomasi (PDF)</a>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="details-btn">Batafsil</button>
+                <button class="test-btn">Test ishlash</button>
+            </div>
+            <div class="rating-section">
+                <h4>Baho bering</h4>
+                <div class="stars" data-content-id="2">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <textarea class="comment-box" placeholder="Izoh qoldiring (3 yulduzdan kam bo'lsa majburiy)"></textarea>
+                <button class="submit-btn">Yuborish</button>
+            </div>
+        </div>
+
+        <!-- Content 3 -->
+        <div class="content-card">
+            <h3>3. JavaScript Asoslari</h3>
+            <div class="content-media">
+                <video controls>
+                    <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4" type="video/mp4">
+                    Video yuklanmadi.
+                </video>
+            </div>
+            <div class="content-body">
+                JavaScript yordamida veb-sahifalarni interaktiv qilishni o'rganasiz. O'zgaruvchilar, funksiyalar va DOM bilan ishlashni amalda sinab ko'rasiz.
+            </div>
+            <div class="progress-bar">
+                <div class="progress" style="width: 10%;"></div>
+            </div>
+            <div class="additional-files">
+                <div class="file-item">
+                    <video controls>
+                        <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
+                        Video yuklanmadi.
+                    </video>
+                </div>
+                <div class="file-item">
+                    <img src="https://images.unsplash.com/photo-1516321310764-9e6d7c6668e6" alt="JS diagrammasi">
+                </div>
+                <div class="file-item">
+                    <a href="https://www.ecma-international.org/wp-content/uploads/ECMA-262_13th_edition_june_2022.pdf" target="_blank">ECMAScript Spetsifikatsiyasi (PDF)</a>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="details-btn">Batafsil</button>
+                <button class="test-btn">Test ishlash</button>
+            </div>
+            <div class="rating-section">
+                <h4>Baho bering</h4>
+                <div class="stars" data-content-id="3">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <textarea class="comment-box" placeholder="Izoh qoldiring (3 yulduzdan kam bo'lsa majburiy)"></textarea>
+                <button class="submit-btn">Yuborish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Yulduzcha baholash
+    document.querySelectorAll('.stars').forEach(stars => {
+        const starElements = stars.querySelectorAll('.star');
+        let selectedRating = 0;
+
+        starElements.forEach((star, index) => {
+            star.addEventListener('click', () => {
+                selectedRating = index + 1;
+                updateStars(starElements, selectedRating);
+            });
+
+            star.addEventListener('mouseover', () => {
+                updateStars(starElements, index + 1, true);
+            });
+
+            star.addEventListener('mouseout', () => {
+                updateStars(starElements, selectedRating);
+            });
+        });
+    });
+
+    function updateStars(stars, rating, hover = false) {
+        stars.forEach((star, index) => {
+            star.classList.toggle('filled', index < rating);
+        });
+    }
+
+    // Baho va izoh yuborish
+    document.querySelectorAll('.submit-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const contentCard = e.target.closest('.content-card');
+            const stars = contentCard.querySelector('.stars');
+            const rating = stars.querySelectorAll('.star.filled').length;
+            const comment = contentCard.querySelector('.comment-box').value.trim();
+            const contentId = stars.getAttribute('data-content-id');
+
+            if (rating < 3 && !comment) {
+                alert('3 yulduzdan kam baho uchun izoh majburiy!');
+                return;
+            }
+
+            const data = {
+                contentId: contentId,
+                rating: rating,
+                comment: comment
+            };
+
+            console.log('Yuborilgan ma\'lumot:', data);
+            alert(`Baho: ${rating} yulduz\nIzoh: ${comment}\nMa'lumot backend'ga yuborildi!`);
+        });
+    });
+
+    // Progress real vaqtda yangilanishi
+    document.addEventListener('scroll', () => {
+        document.querySelectorAll('.content-card').forEach(card => {
+            const video = card.querySelector('.content-media video');
+            if (video) {
+                video.addEventListener('timeupdate', () => {
+                    const progress = (video.currentTime / video.duration) * 100;
+                    card.querySelector('.progress').style.width = `${progress}%`;
+                });
+            }
+        });
+    });
+
+    // Batafsil tugmasi
+    document.querySelectorAll('.details-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const contentCard = e.target.closest('.content-card');
+            const additionalFiles = contentCard.querySelector('.additional-files');
+            additionalFiles.classList.toggle('show');
+            button.textContent = additionalFiles.classList.contains('show') ? 'Yopish' : 'Batafsil';
+        });
+    });
+
+    // Test ishlash tugmasi
+    document.querySelectorAll('.test-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const contentId = e.target.closest('.content-card').querySelector('.stars').getAttribute('data-content-id');
+            alert(`Content ${contentId} uchun test ochildi!`);
+            // Bu yerda test sahifasiga redirect yoki modal ochish mumkin
+        });
+    });
+</script>
+</body>
+</html>

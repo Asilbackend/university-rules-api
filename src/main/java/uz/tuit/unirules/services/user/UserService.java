@@ -15,9 +15,11 @@ import uz.tuit.unirules.entity.faculty.group.Group;
 import uz.tuit.unirules.entity.user.User;
 import uz.tuit.unirules.mapper.UserMapper;
 import uz.tuit.unirules.projections.UserProjection;
+import uz.tuit.unirules.repository.RoleRepository;
 import uz.tuit.unirules.repository.UserRepository;
 import uz.tuit.unirules.services.attachment.AttachmentService;
 import uz.tuit.unirules.services.discipline_rule.DisciplineRuleService;
+import uz.tuit.unirules.services.AuthUserService;
 import uz.tuit.unirules.services.faculty.GroupService;
 import uz.tuit.unirules.services.role.RoleService;
 
@@ -30,11 +32,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final GroupService groupService;
     private final RoleService roleService;
+    private final RoleRepository roleRepository;
+    private final AuthUserService authUserService;
 
-    public UserService(UserRepository userRepository, GroupService groupService, DisciplineRuleService disciplineRuleService, AttachmentService attachmentService, RoleService roleService) {
+    public UserService(UserRepository userRepository, GroupService groupService, RoleService roleService, RoleRepository roleRepository, AuthUserService authUserService) {
         this.userRepository = userRepository;
         this.groupService = groupService;
         this.roleService = roleService;
+        this.roleRepository = roleRepository;
+        this.authUserService = authUserService;
     }
 
     @Transactional
@@ -79,7 +85,7 @@ public class UserService {
 
 
     public ApiResponse<UserRespDto> get(Long entityId) {
-        UserProjection userProjection = userRepository.findUserById(entityId)
+        UserProjection userProjection = userRepository.findUserProjById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "user is not find by this id = %s".formatted(entityId)));
         UserRespDto dto = makeUserRespDtoFromUserProjection(userProjection);
@@ -194,5 +200,13 @@ public class UserService {
     }
     public Page<User> findAllPage(Pageable pageable) {
         return userRepository.findAll(pageable);
+    }
+
+
+    public ApiResponse<UserRespDto> getForStudent(Long entityId) {
+        if (!authUserService.getAuthUserId().equals(entityId)) {
+            throw new RuntimeException("ruxsat etilmagan qiymat ");
+        }
+        return get(entityId);
     }
 }

@@ -2,26 +2,30 @@ package uz.tuit.unirules.services.module;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Streamable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
-import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.ModuleCreateDto;
 import uz.tuit.unirules.entity.modul.Module;
 import uz.tuit.unirules.repository.ModuleRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
-public class ModuleService implements SimpleCrud<Long, ModuleCreateDto, ModuleCreateDto, Module> {
+public class ModuleService {
     private final ModuleRepository moduleRepository;
 
     public ModuleService(ModuleRepository moduleRepository) {
         this.moduleRepository = moduleRepository;
     }
 
-    @Override
+
     @Transactional
     public ApiResponse<Module> create(ModuleCreateDto moduleCreateDto) {
         Module build = Module.builder()
@@ -33,7 +37,7 @@ public class ModuleService implements SimpleCrud<Long, ModuleCreateDto, ModuleCr
         return new ApiResponse<>(201, "saved", true, build);
     }
 
-    @Override
+
     public ApiResponse<Module> get(Long entityId) {
         return new ApiResponse<>(200,
                 "module", true,
@@ -45,7 +49,7 @@ public class ModuleService implements SimpleCrud<Long, ModuleCreateDto, ModuleCr
                 new EntityNotFoundException("module not found by id = " + entityId));
     }
 
-    @Override
+
     @Transactional
     public ApiResponse<Module> update(Long entityId, ModuleCreateDto moduleCreateDto) {
         Module module = findById(entityId);
@@ -56,7 +60,7 @@ public class ModuleService implements SimpleCrud<Long, ModuleCreateDto, ModuleCr
         return new ApiResponse<>(200, "updated", true, module);
     }
 
-    @Override
+
     @Transactional
     public ApiResponse<Module> delete(Long entityId) {
         Module module = findById(entityId);
@@ -65,17 +69,40 @@ public class ModuleService implements SimpleCrud<Long, ModuleCreateDto, ModuleCr
         return new ApiResponse<>(200, "deleted", true, null);
     }
 
-    @Override
+
     @Transactional(readOnly = true)
     public ApiResponse<List<Module>> getAll() {
         List<Module> all = moduleRepository.findAll();
         return new ApiResponse<>(200, "all mosules", true, all);
     }
 
-    @Override
-    public ApiResponse<List<Module>> getAllPagination(Pageable pageable) {
-        Page<Module> all = moduleRepository.findAll(pageable);
-        List<Module> content = all.getContent();
-        return new ApiResponse<>(200, "modules page", true, content);
+
+    public Page<Module> getAllPagination(Pageable pageable) {
+        return moduleRepository.findAll(pageable);
     }
+
+    public ApiResponse<Page<Module>> getAllByModuleState(Module.ModuleState moduleState, Pageable pageable) {
+        Page<Module> allByModuleState = moduleRepository.findAllByModuleState(moduleState, pageable);
+        return new ApiResponse<>(200, "modules", true, allByModuleState);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Module> getModuleVisible(Long id) throws AccessDeniedException {
+        Module module = findById(id);
+        if (module.getModuleState().equals(Module.ModuleState.INVISIBLE)) {
+            module = null;
+        }
+        return new ApiResponse<>(200,
+                "module", true,
+                module);
+    }
+
+    public Page<Module> getAllPaginationVisible(Pageable pageable) {
+        /*List<Module> visibleModules = all.getContent().stream()
+                .filter(module -> module.getModuleState() != Module.ModuleState.INVISIBLE)
+                .collect(Collectors.toList());
+        return new PageImpl<>(visibleModules, pageable, visibleModules.size());*/
+        return moduleRepository.findAllByModuleStateNot(Module.ModuleState.INVISIBLE, pageable);
+    }
+
 }

@@ -23,15 +23,23 @@ public class UserController {
         this.userService = userService;
     }
 
+    
     @PostMapping
     public ApiResponse<UserRespDto> create(@RequestBody CreateUserReqDto createUserReqDto) {
         return userService.create(createUserReqDto);
     }
 
+    
     @GetMapping("/{id}")
     public ApiResponse<UserRespDto> get(@PathVariable(name = "id") Long entityId) {
         return userService.get(entityId);
     }
+
+    @GetMapping("/-student-/{id}")
+    public ApiResponse<UserRespDto> getForStudent(@PathVariable(name = "id") Long entityId) {
+        return userService.getForStudent(entityId);
+    }
+
 
     @PutMapping("/{id}")
     public ApiResponse<UserRespDto> update(@PathVariable(name = "id") Long entityId, @RequestBody UpdateUserReqDto updateUserReqDto) {

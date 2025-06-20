@@ -12,6 +12,7 @@ import uz.tuit.unirules.dto.request_dto.faculty.UpdateGroupReqDto;
 import uz.tuit.unirules.dto.respond_dto.faculty.GroupRespDto;
 import uz.tuit.unirules.entity.faculty.education_direction.EducationDirection;
 import uz.tuit.unirules.entity.faculty.group.Group;
+import uz.tuit.unirules.handler.exceptions.AlreadyExist;
 import uz.tuit.unirules.mapper.faculty.GroupMapper;
 import uz.tuit.unirules.repository.faculty.GroupRepository;
 

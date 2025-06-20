@@ -1,6 +1,8 @@
 package uz.tuit.unirules.entity.certificate;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
@@ -17,8 +19,10 @@ import java.time.LocalDate;
 @Entity
 public class Certificate extends BaseEntity {
     @ManyToOne
+    @JoinColumn
     private UserTest userTest;
     @ManyToOne
+    @JoinColumn(nullable = false)
     private Attachment attachment;
     private LocalDate issuedAt; //berilgan sana
     @Builder.Default

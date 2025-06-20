@@ -1,5 +1,6 @@
 package uz.tuit.unirules.controller;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
@@ -52,5 +53,11 @@ public class RecommendedModuleController {
     @GetMapping
     public ApiResponse<Page<RecommendedModuleRespDto>> getAllPagination(Pageable pageable) {
         return service.getAllPagination(pageable);
+    }
+
+    @GetMapping("/allByUserId")
+    public ApiResponse<List<RecommendedModuleRespDto>> getAllByUserId(@RequestParam Long userId,
+                                                                      @ParameterObject Pageable pageable) {
+        return service.getAllByUserId(userId, pageable);
     }
 }

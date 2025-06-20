@@ -1,9 +1,6 @@
 package uz.tuit.unirules.entity.support_request;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.user.User;
@@ -20,13 +17,20 @@ public class SupportRequest extends BaseEntity {
     @ManyToOne
     private User supportUser;
     private String subject;
+    @Lob
     private String message;
+    @Lob
+    private String responseMessage;
     @Builder.Default
     private Boolean isDeleted = false;
     @Enumerated(value = EnumType.STRING)
-    private Status status=Status.CLOSED;
+    private Status status = Status.OPEN;
 
     public enum Status {
-        OPEN, IN_PROGRESS, CLOSED
+        OPEN, //so'rov yuborildi
+        PENDING, // so'rov qabul qilindi ko'rib chiqilyapti
+        IN_PROGRESS,// so'rov ko'rib chiqilyapti
+        CLOSED,// javob berildi
+        CANCELLED // So‘rov foydalanuvchi yoki admin tomonidan bekor qilingan.
     }
 }

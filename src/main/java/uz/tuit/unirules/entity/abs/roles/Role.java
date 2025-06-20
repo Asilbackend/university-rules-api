@@ -1,5 +1,6 @@
 package uz.tuit.unirules.entity.abs.roles;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +17,9 @@ import uz.tuit.unirules.entity.abs.BaseEntity;
 @Setter
 /*@SuperBuilder*/
 public class Role extends BaseEntity implements GrantedAuthority {
+    @Column(unique = true, nullable = false)
     private String role;
+
     @Override
     public String getAuthority() {
         return this.role;

@@ -23,16 +23,9 @@ public class ContentStudent extends BaseEntity {
     private User user;
     @ManyToOne(optional = false)
     private Content content;
-    @Min(0)
-    @Max(5)
-    private Integer rating;
-    private String comment;
     @Builder.Default
     private Boolean isDeleted = false;
-    /**
-     * Majburiy contentlar uchun qaysi joygacha o‘qilgani (masalan, % progress, yoki position)
-     */
-    private Double progress = 0.0;
+
     /**
      * User contentni to‘liq o‘qiganmi yoki yo‘q
      */
@@ -50,13 +43,6 @@ public class ContentStudent extends BaseEntity {
      */
     private boolean isRequired = false;
 
-    @PrePersist
-    @PreUpdate
-    private void validateRatingComment() {
-        if (rating != null && rating < 3 && (comment == null || comment.trim().isEmpty())) {
-            throw new IllegalArgumentException("3 dan past baho uchun comment majburiy");
-        }
-    }
 
     public enum UserContentStatus {
         NOT_STARTED,

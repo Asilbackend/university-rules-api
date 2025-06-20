@@ -1,7 +1,8 @@
 package uz.tuit.unirules.controller;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springdoc.core.annotations.ParameterObject;
+import io.swagger.v3.oas.annotations.Parameter;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,11 +32,25 @@ public class NotificationController {
         return service.create(createNotificationReqDto);
     }
 
+
     @Validated
     @GetMapping("/{id}")
     public ApiResponse<NotificationRespDto> get(@PathVariable Long id) {
         return service.get(id);
     }
+
+    @GetMapping("/student/read/{notificationId}")
+    public ApiResponse<NotificationRespDto> getByUserId(@PathVariable(value = "notificationId") Long notificationId) {
+        return service.getByUserId(notificationId);
+    }
+
+    @GetMapping("/student/getAll")
+    public ApiResponse<?> getAllForStudent(
+            @RequestParam Boolean isRead,
+            @ParameterObject Pageable pageable) {
+        return service.getAllForStudent(isRead, pageable);
+    }
+
 
     @PutMapping("/{id}")
     public ApiResponse<NotificationRespDto> update(@PathVariable Long id,

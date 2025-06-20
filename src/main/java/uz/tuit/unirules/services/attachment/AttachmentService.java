@@ -1,10 +1,13 @@
 package uz.tuit.unirules.services.attachment;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,104 +15,187 @@ import org.springframework.web.multipart.MultipartFile;
 import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.repository.AttachmentRepository;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class AttachmentService {
-    private final AttachmentRepository attachmentRepository;
-    private final Set<String> imageExtensions = Set.of(".jpeg", ".jpg", ".png", ".gif", ".webp");
-    private final Set<String> videoExtensions = Set.of(".mp4", ".webm", ".mov");
-    private final Set<String> audioExtensions = Set.of(".mp3", ".wav", ".ogg");
-    private final Set<String> documentExtensions = Set.of(".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt");
 
-    public AttachmentService(AttachmentRepository attachmentRepository) {
-        this.attachmentRepository = attachmentRepository;
-    }
+    private final AttachmentRepository attachmentRepository;
+
+    private static final Set<String> IMAGE_EXTENSIONS = Set.of(".jpeg", ".jpg", ".png", ".gif", ".webp");
+    private static final Set<String> VIDEO_EXTENSIONS = Set.of(".mp4", ".webm", ".mov");
+    private static final Set<String> AUDIO_EXTENSIONS = Set.of(".mp3", ".wav", ".ogg");
+    private static final Set<String> DOCUMENT_EXTENSIONS = Set.of(".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt");
 
     @Value("${image.file}")
-    String imagePath;
+    private String imagePath;
     @Value("${video.file}")
-    String videoPath;
+    private String videoPath;
     @Value("${audio.file}")
-    String audioPath;
+    private String audioPath;
     @Value("${document.file}")
-    String documentPath;
+    private String documentPath;
     @Value("${other.file}")
-    String otherFilePath;
+    private String otherFilePath;
 
-
-    @Value("${other.url}")
-    String otherUrl;
     @Value("${image.url}")
-    String imageUrl;
+    private String imageUrl;
     @Value("${video.url}")
-    String videoUrl;
+    private String videoUrl;
     @Value("${audio.url}")
-    String audioUrl;
+    private String audioUrl;
     @Value("${document.url}")
-    String documentUrl;
+    private String documentUrl;
+    @Value("${other.url}")
+    private String otherUrl;
+
+    public Path getVideoPath(String fileName) {
+        return Paths.get(videoPath + fileName);
+    }
+
+    @Getter
+    @Setter
+    private static class FileNameAndExtension {
+        private String fileName;
+        private String extension;
+
+        FileNameAndExtension(String fileName, String extension) {
+            this.fileName = fileName;
+            this.extension = extension;
+        }
+    }
 
     @Transactional
     public Attachment saveFile(MultipartFile file) {
-        // Fayl nomini tozalash
-        FileNameAndExtension fileNameAndExtension = cleanFileName(file.getOriginalFilename());
-        String filename = fileNameAndExtension.fileName;
-        String fileExtension = fileNameAndExtension.extension;
-        if (fileExtension.isBlank()) {
-            throw new RuntimeException("Invalid file extension.");
-        }
-        // Fayl turini aniqlash
-        Path path;
-        String url;
-        Attachment.AttachType attachType;
-        if (imageExtensions.contains(fileExtension)) {
-            path = Paths.get(imagePath + filename);
-            url = imageUrl + filename;
-            attachType = Attachment.AttachType.PICTURE;
-        } else if (videoExtensions.contains(fileExtension)) {
-            path = Paths.get(videoPath + filename);
-            url = videoUrl + filename;
-            attachType = Attachment.AttachType.VIDEO;
-        } else if (audioExtensions.contains(fileExtension)) {
-            path = Paths.get(audioPath + filename);
-            url = audioUrl + filename;
-            attachType = Attachment.AttachType.AUDIO;
-        } else if (documentExtensions.contains(fileExtension)) {
-            path = Paths.get(documentPath + filename);
-            url = documentUrl + filename;
-            attachType = Attachment.AttachType.DOCUMENT;
-        } else {
-            path = Paths.get(otherFilePath + filename);
-            url = otherUrl + filename;
-            attachType = Attachment.AttachType.ANY;
-        }
-        // Fayl ma'lumotini saqlash uchun Attachment yaratish
+        FileNameAndExtension fileDetails = cleanFileName(file.getOriginalFilename());
+        FileConfig fileConfig = determineFileConfig(fileDetails.extension);
+
+        Path path = Paths.get(fileConfig.path + fileDetails.fileName);
+        String url = fileConfig.url + fileDetails.fileName;
+
         Attachment attachment = Attachment.builder()
-                .fileName(filename)
+                .fileName(fileDetails.fileName)
                 .url(url)
-                .attachType(attachType)
+                .attachType(fileConfig.attachType)
                 .build();
 
         try {
-            // Direktoriya mavjudligini tekshirish va kerak bo'lsa yaratish
-            if (!Files.exists(path.getParent())) {
-                Files.createDirectories(path.getParent());
-            }
-            // Faylni diskka yozish
+            ensureDirectoryExists(path.getParent());
             Files.write(path, file.getBytes());
-
-            // Fayl ma'lumotlarini ma'lumotlar bazasiga saqlash
-            attachment = attachmentRepository.save(attachment);
+            return attachmentRepository.save(attachment);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save file to disk", e);
+            throw new RuntimeException("Failed to save file to disk: " + fileDetails.fileName, e);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to save file metadata to the database", e);
+            throw new RuntimeException("Failed to save file metadata to database", e);
         }
-        return attachment;
+    }
+
+    @Transactional
+    public Attachment saveVideoWithPoster(MultipartFile file) throws IOException {
+        Attachment attachment = saveFile(file);
+        String imageName = UUID.randomUUID() + ".png";
+        Path posterPath = Paths.get(imagePath + imageName);
+        String posterUrl = imageUrl + imageName;
+
+        byte[] thumbnail = getVideoThumbnail(Paths.get(videoPath + attachment.getFileName()));
+        Files.write(posterPath, thumbnail);
+
+        attachment.setThumbnailImageUrl(posterUrl);
+        return attachmentRepository.save(attachment);
+    }
+
+    public HttpEntity<?> getFileByName(String fileName, Attachment.AttachType attachType) {
+        String filePath = getFilePathByType(attachType);
+        Path path = Paths.get(filePath + fileName);
+
+        if (!Files.exists(path)) {
+            throw new RuntimeException("File not found: " + fileName);
+        }
+
+        try {
+            String contentType = Files.probeContentType(path);
+            if (contentType == null) {
+                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDispositionFormData("attachment", fileName);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(Files.readAllBytes(path));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read file: " + fileName, e);
+        }
+    }
+
+    public HttpEntity<?> getImageByName(String imageName) {
+        return getFileByName(imageName, Attachment.AttachType.PICTURE);
+    }
+
+    public HttpEntity<?> getVideoByName(String videoName) {
+        return getFileByName(videoName, Attachment.AttachType.VIDEO);
+    }
+
+    public HttpEntity<?> getAudioByName(String audioName) {
+        return getFileByName(audioName, Attachment.AttachType.AUDIO);
+    }
+
+    public HttpEntity<?> getDocumentByName(String documentName) {
+        return getFileByName(documentName, Attachment.AttachType.DOCUMENT);
+    }
+
+    public HttpEntity<?> getOtherFile(String fileName) {
+        return getFileByName(fileName, Attachment.AttachType.ANY);
+    }
+
+    @Transactional
+    public void deleteFileByAttachId(Long attachId) {
+        Attachment attachment = findById(attachId);
+        deleteFileByName(attachment.getFileName(), attachment.getAttachType());
+        attachment.setFileName(null);
+        attachment.setUrl(null);
+        attachment.setAttachType(null);
+        attachmentRepository.save(attachment);
+    }
+
+    public Attachment findById(Long id) {
+        return attachmentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found with id: " + id));
+    }
+
+    private FileConfig determineFileConfig(String extension) {
+        if (IMAGE_EXTENSIONS.contains(extension)) {
+            return new FileConfig(imagePath, imageUrl, Attachment.AttachType.PICTURE);
+        } else if (VIDEO_EXTENSIONS.contains(extension)) {
+            return new FileConfig(videoPath, videoUrl, Attachment.AttachType.VIDEO);
+        } else if (AUDIO_EXTENSIONS.contains(extension)) {
+            return new FileConfig(audioPath, audioUrl, Attachment.AttachType.AUDIO);
+        } else if (DOCUMENT_EXTENSIONS.contains(extension)) {
+            return new FileConfig(documentPath, documentUrl, Attachment.AttachType.DOCUMENT);
+        } else {
+            return new FileConfig(otherFilePath, otherUrl, Attachment.AttachType.ANY);
+        }
+    }
+
+    private String getFilePathByType(Attachment.AttachType attachType) {
+        return switch (attachType) {
+            case PICTURE -> imagePath;
+            case VIDEO -> videoPath;
+            case AUDIO -> audioPath;
+            case DOCUMENT -> documentPath;
+            case ANY -> otherFilePath;
+            default -> throw new EntityNotFoundException("Invalid attachment type");
+        };
     }
 
     private FileNameAndExtension cleanFileName(String originalFilename) {
@@ -117,139 +203,85 @@ public class AttachmentService {
             throw new IllegalArgumentException("Filename cannot be null or empty");
         }
 
-        //Fayl nomini tozalash
-        String cleanedFilename = originalFilename
-                .trim()
-                .replaceAll("[^a-zA-Z0-9._-]", "_");
-
+        String cleanedFilename = originalFilename.trim().replaceAll("[^a-zA-Z0-9._-]", "_");
         String filenameWithoutExtension;
         String extension = "";
 
         int lastDotIndex = cleanedFilename.lastIndexOf('.');
         if (lastDotIndex != -1) {
             filenameWithoutExtension = cleanedFilename.substring(0, lastDotIndex);
-            extension = getFileExtension(cleanedFilename, lastDotIndex);
+            extension = cleanedFilename.substring(lastDotIndex).toLowerCase();
         } else {
             filenameWithoutExtension = cleanedFilename;
         }
 
-        // DB dan barcha mos fayl nomlarini olish
-        System.out.println("filenameWithoutExtension = " + filenameWithoutExtension);
-        //List<String> similarFilenames = attachmentRepository.findFilenamesByPrefix(filenameWithoutExtension);
-        Integer countFilenamesByPrefix = attachmentRepository.countFilenamesByPrefix(filenameWithoutExtension);
-        // Nomni takrorlanmas qilish
-        if (countFilenamesByPrefix != 0) {
-            return new FileNameAndExtension(String.format("%s(%d)%s", filenameWithoutExtension, countFilenamesByPrefix, extension), extension);
+        Integer count = attachmentRepository.countFilenamesByPrefix(filenameWithoutExtension);
+        if (count > 0) {
+            return new FileNameAndExtension(
+                    String.format("%s(%d)%s", filenameWithoutExtension, count, extension),
+                    extension
+            );
         }
         return new FileNameAndExtension(cleanedFilename, extension);
     }
 
-    private String getFileExtension(String fileName, int lastDotIndex) {
-        //Fayl kengaytmasini olish
-        return fileName.substring(lastDotIndex).toLowerCase();
-    }
-
-    public Attachment findById(Long id) {
-        return attachmentRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("attachment not found by id = %s".formatted(id)));
-    }
-
-    public HttpEntity<?> getImageByName(String imageName) {
-        Path path = Paths.get(imagePath + imageName);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, "image/jpeg"); //Rasm turi, masalan JPEG uchun
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"image.jpg\""); //Faylni yuklab olishda taklif qilinadigan nom
-        try {
-            byte[] bytes = Files.readAllBytes(path);
-            if (!Files.exists(path))
-                throw new RuntimeException("ushbu nom boyicha fayl topilmadi : " + imageName);
-            return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public HttpEntity<?> getVideoByName(String videoName) {
-        return getFile(videoName, videoPath);
-    }
-
-    private ResponseEntity<byte[]> getFile(String fileName, String filePath) {
-        Path path = Paths.get(filePath + fileName);
-        if (!Files.exists(path)) {
-            throw new RuntimeException("Ushbu nom bo'yicha fayl topilmadi: " + fileName);
-        }
-        try {
-            // MIME turini avtomatik aniqlash
-            String contentType = Files.probeContentType(path);
-            if (contentType == null) {
-                contentType = "application/octet-stream"; // Noma'lum tur uchun default
-            }
-            // HttpHeaders qo'shish
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_TYPE, contentType);
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
-            // Faylni o'qish va javob qaytarish
-            byte[] bytes = Files.readAllBytes(path);
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(bytes);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Faylni o'qishda xatolik yuz berdi: " + e.getMessage(), e);
-        }
-    }
-
-    public HttpEntity<?> getAudioByName(String audioName) {
-        return getFile(audioName, audioPath);
-    }
-
-    public HttpEntity<?> getDocumentByName(String documentName) {
-        return getFile(documentName, documentPath);
-    }
-
-    @Transactional
-    public void deleteFileByAttachId(Long attachId) {
-        Attachment attachment = attachmentRepository.findById(attachId)
-                .orElseThrow(() -> new RuntimeException("Attachment not found with id: " + attachId));
-        deleteByName(attachment.getFileName(), attachment.getAttachType());
-        attachment.setAttachType(null);
-        attachment.setUrl(null);
-        attachment.setFileName(null);
-        attachmentRepository.save(attachment);
-    }
-
-    private void deleteByName(String name, Attachment.AttachType attachType) {
-        Path path;
-        if (attachType.equals(Attachment.AttachType.ANY)) {
-            path = Paths.get(otherFilePath + name);
-        } else if (attachType.equals(Attachment.AttachType.VIDEO)) {
-            path = Paths.get(videoPath + name);
-        } else if (attachType.equals(Attachment.AttachType.PICTURE)) {
-            path = Paths.get(imagePath + name);
-        } else if (attachType.equals(Attachment.AttachType.AUDIO)) {
-            path = Paths.get(audioPath + name);
-        } else if (attachType.equals(Attachment.AttachType.DOCUMENT)) {
-            path = Paths.get(documentPath + name);
-        } else {
-            throw new EntityNotFoundException("fayl mavjud emas");
-        }
+    private void deleteFileByName(String fileName, Attachment.AttachType attachType) {
+        Path path = Paths.get(getFilePathByType(attachType) + fileName);
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            throw new RuntimeException("Could not delete file by this name: " + name, e);
+            throw new RuntimeException("Failed to delete file: " + fileName, e);
         }
     }
 
-    public HttpEntity<?> getOtherFile(String fileName) {
-        return getFile(fileName, otherFilePath);
+    private void ensureDirectoryExists(Path directory) throws IOException {
+        if (!Files.exists(directory)) {
+            Files.createDirectories(directory);
+        }
     }
 
-    static class FileNameAndExtension {
-        String fileName;
-        String extension;
+    private byte[] getVideoThumbnail(Path videoPath) throws IOException {
+        Path imagePath = Files.createTempFile("video_thumb_", ".jpg");
+        try {
+            Process process = getProcess(videoPath, imagePath);
 
-        public FileNameAndExtension(String fileName, String extension) {
-            this.fileName = fileName;
-            this.extension = extension;
+            if (process.waitFor() != 0) {
+                throw new IOException("FFmpeg failed to create thumbnail");
+            }
+
+            return Files.readAllBytes(imagePath);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while creating thumbnail", e);
+        } finally {
+            Files.deleteIfExists(imagePath);
         }
+    }
+
+    private static Process getProcess(Path videoPath, Path imagePath) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder(
+                //yuklash oldidan:
+              //  "ffmpeg.exe",
+                "C:\\Users\\Asilb\\ffmpeg-7.1.1-essentials_build\\bin\\ffmpeg.exe",
+                "-i", videoPath.toAbsolutePath().toString(),
+                "-ss", "00:00:01",
+                "-vframes", "1",
+                "-y",
+                imagePath.toAbsolutePath().toString()
+        );
+
+
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            while (reader.readLine() != null) {
+                // Log output if needed
+            }
+        }
+        return process;
+    }
+
+    private record FileConfig(String path, String url, Attachment.AttachType attachType) {
     }
 }

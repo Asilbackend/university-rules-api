@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import uz.tuit.unirules.entity.user.User;
 
 import java.sql.Timestamp;
 
@@ -22,5 +24,8 @@ public class BaseEntity {
     private Timestamp createdAt;
     @UpdateTimestamp
     private Timestamp updatedAt;
+    @CreatedBy
+    @ManyToOne
+    private User user;
 }
 

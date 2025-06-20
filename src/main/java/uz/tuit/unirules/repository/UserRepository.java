@@ -47,7 +47,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             WHERE u.id= ?1
             """, nativeQuery = true
     )
-    Optional<UserProjection> findUserById(Long id);
+    Optional<UserProjection> findUserProjById(Long id);
 
     @Query(value = """ 
             SELECT
@@ -58,10 +58,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             u.phone as phone,
             u.passed_test as passedTest,
             u.group_id as groupId,
-            u.is_deleted as isDeleted       
+            u.is_deleted as isDeleted
             FROM users u
-            JOIN role r on u.role_id=r.id 
-            WHERE u.is_deleted = ?1
+            JOIN role r on u.role_id=r.id
+            WHERE u.is_deleted=:isDelete
             """, nativeQuery = true
     )
     List<UserProjection> findAllUsers(Boolean isDelete);
@@ -69,7 +69,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String name);
 
     @Query(value = """
-            SELECT  
+            SELECT
                 u.id,
                 u.firstname,
                 u.lastname,
@@ -92,6 +92,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
         // param buyerda sqldagi groupId ni Param(groupid) ga ulash uchun.
     Page<UserProjection> findUsersByGroupId(@Param("groupId") Long groupId, Pageable pageable);
 
+    @Query("select distinct u.id from User u where u.username=:userName")
+    Optional<Long> findUserIdByUsername(String userName);
+
+    @Query("select u from User u where u.role.role=:roleName")
+    List<User> findAllByRole(String roleName);
     @Query(value = """
             SELECT  
                 u.id,

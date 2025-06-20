@@ -16,7 +16,7 @@ public class Notification extends BaseEntity {
     private User user;
     private String title;
     private String message;
-    Boolean is_read;
+    private Boolean is_read;
     @Builder.Default
     private Boolean isDeleted = false;
 }

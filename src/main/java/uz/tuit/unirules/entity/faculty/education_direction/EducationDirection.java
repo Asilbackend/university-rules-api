@@ -1,5 +1,6 @@
 package uz.tuit.unirules.entity.faculty.education_direction;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import lombok.*;
@@ -13,6 +14,7 @@ import uz.tuit.unirules.entity.faculty.Faculty;
 @Setter
 @Entity
 public class EducationDirection extends BaseEntity {
+    @Column(unique = true)
     private String name;
     @Builder.Default
     private Boolean isDeleted = false;

@@ -12,10 +12,13 @@ import uz.tuit.unirules.dto.respond_dto.ContentRespDto;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.entity.content.Content;
+import uz.tuit.unirules.entity.content_student.AttachmentStudent;
+import uz.tuit.unirules.entity.content_student.ContentStudent;
 import uz.tuit.unirules.entity.modul.Module;
 import uz.tuit.unirules.projections.ContentProjection;
 import uz.tuit.unirules.repository.AttachmentRepository;
 import uz.tuit.unirules.repository.ContentRepository;
+import uz.tuit.unirules.services.attachment_student.AttachmentStudentService;
 import uz.tuit.unirules.services.module.ModuleService;
 
 import java.util.ArrayList;
@@ -26,19 +29,24 @@ public class ContentService implements SimpleCrud<Long, ContentCreateDto, Conten
     private final ContentRepository contentRepository;
     private final ModuleService moduleService;
     private final AttachmentRepository attachmentRepository;
+    private final AttachmentStudentService attachmentStudentService;
 
-    public ContentService(ContentRepository contentRepository, ModuleService moduleService, AttachmentRepository attachmentRepository) {
+    public ContentService(ContentRepository contentRepository, ModuleService moduleService, AttachmentRepository attachmentRepository, AttachmentStudentService attachmentStudentService) {
         this.contentRepository = contentRepository;
         this.moduleService = moduleService;
         this.attachmentRepository = attachmentRepository;
+        this.attachmentStudentService = attachmentStudentService;
     }
 
     @Override
     @Transactional
     public ApiResponse<ContentRespDto> create(ContentCreateDto contentCreateDto) {
+        Boolean requiredContent = contentCreateDto.isRequired();
         // 1. Modulni olish
         Module module = moduleService.findById(contentCreateDto.moduleId());
-
+        if (module.getModuleState().equals(Module.ModuleState.REQUIRED)) {
+            requiredContent = true;
+        }
         // 2. Attachment ID'lar bo‘sh bo‘lmasligini tekshirish
         List<Attachment> attachments = getAttachmentsByIds(contentCreateDto.attachmentIds());
 
@@ -47,6 +55,7 @@ public class ContentService implements SimpleCrud<Long, ContentCreateDto, Conten
                 .title(contentCreateDto.title())
                 .body(contentCreateDto.body())
                 .module(module)
+                .isRequired(requiredContent)
                 .averageContentRating(
                         contentCreateDto.averageContentRating() != null
                                 ? contentCreateDto.averageContentRating()
@@ -73,7 +82,7 @@ public class ContentService implements SimpleCrud<Long, ContentCreateDto, Conten
                 module.getId(),
                 savedContent.getAverageContentRating()
         );
-
+        attachmentStudentService.asyncCreateByAttachments(attachments, content);
         return new ApiResponse<>(200, "Content is saved", true, dto);
     }
 
@@ -149,10 +158,15 @@ public class ContentService implements SimpleCrud<Long, ContentCreateDto, Conten
         list.forEach(content ->
                 contentRespDtos.add(new ContentRespDto(content.getId(), content.getTitle(), content.getBody(), getLongStream(content), content.getModule().getId(), content.getAverageContentRating())
                 ));
-        return new ApiResponse<>(200, "ContentRespDto", true, contentRespDtos);
+        return new ApiResponse<>(200, "Contents", true, contentRespDtos);
     }
 
     private static List<Long> getLongStream(Content content) {
         return content.getAttachments().stream().map(BaseEntity::getId).toList();
+    }
+
+    public ApiResponse<List<ContentRespDto>> getAllByModuleId(Long moduleId, Pageable pageable) {
+        List<ContentRespDto> list = contentRepository.findAllByModuleId(moduleId, pageable).map(ContentService::makeContentRespDtoFromProjection).toList();
+        return new ApiResponse<>(200, "Contents", true, list);
     }
 }

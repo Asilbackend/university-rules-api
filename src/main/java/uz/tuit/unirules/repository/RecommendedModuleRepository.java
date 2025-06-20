@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import uz.tuit.unirules.entity.recommended_module.RecommendedModule;
 
 public interface RecommendedModuleRepository extends JpaRepository<RecommendedModule,Long> {
+    Page<RecommendedModule> findAllByUserId(Long userId, Pageable pageable);
     Page<RecommendedModule> findAllByIsDeletedFalse(Pageable pageable);
 }

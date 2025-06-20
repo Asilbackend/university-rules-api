@@ -3,6 +3,7 @@ package uz.tuit.unirules.services.discipline_rule;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
@@ -17,6 +18,7 @@ import uz.tuit.unirules.projections.DisciplineRuleProjection;
 import uz.tuit.unirules.repository.DisciplineRuleRepository;
 import uz.tuit.unirules.services.attachment.AttachmentService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -47,6 +49,8 @@ public class DisciplineRuleService {
                 disciplineRuleMapper.toDto(disciplineRule));
     }
 
+    
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'STUDENT')")
     public ApiResponse<DisciplineRuleRespDto> get(Long entityId) {
         DisciplineRuleProjection disciplineRuleProjection = disciplineRuleRepository
                 .findDisciplineRuleById(entityId).
@@ -64,6 +68,7 @@ public class DisciplineRuleService {
 
     private static DisciplineRuleRespDto makeDisciplineRuleFromProjection(DisciplineRuleProjection projection) {
         return new DisciplineRuleRespDto(
+                projection.getId(),
                 projection.getTitle(),
                 projection.getBody(),
                 projection.getAttachmentId());
@@ -121,7 +126,6 @@ public class DisciplineRuleService {
                 "all discipline rules",
                 true,
                 respDtoList
-
         );
     }
 
@@ -133,11 +137,22 @@ public class DisciplineRuleService {
                 200,
                 "all pages come",
                 true,
+                /*findAllPage(pageable, null).map(disciplineRuleMapper::toDto).toList();*/
                 dtoPage
         );
     }
 
-    public Page<DisciplineRule> findAllPage(Pageable pageable) {
-        return disciplineRuleRepository.findAll(pageable);
+    public Page<DisciplineRule> findAllPage(Pageable pageable, Boolean isDeleted) {
+        return disciplineRuleRepository.findAllByIsDeleted(isDeleted, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<List<DisciplineRuleRespDto>> getAllPaginationForStudent(Pageable pageable) {
+        return new ApiResponse<>(
+                200,
+                "all discipline rules pages",
+                true,
+                findAllPage(pageable, false).map(disciplineRuleMapper::toDto).toList()
+        );
     }
 }

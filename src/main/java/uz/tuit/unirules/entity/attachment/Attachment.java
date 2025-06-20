@@ -17,6 +17,8 @@ public class Attachment extends BaseEntity {
     @Builder.Default
     private String fileId = UUID.randomUUID().toString();
     private String url;
+    @Builder.Default
+    private String thumbnailImageUrl = null; //video yoki boshqa katta fayllar uchun rasm
     private String fileName;
     @Enumerated(EnumType.STRING)
     private AttachType attachType;

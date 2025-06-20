@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import uz.tuit.unirules.entity.discipline_rule.DisciplineRule;
 import uz.tuit.unirules.projections.DisciplineRuleProjection;
 
@@ -27,7 +28,7 @@ public interface DisciplineRuleRepository extends JpaRepository<DisciplineRule, 
             dr.title as title,
             dr.body as body
             FROM discipline_rule dr
-             WHERE dr.id = ?1;
+             WHERE dr.is_deleted = false AND dr.id = ?1;
             """, nativeQuery = true)
     Optional<DisciplineRuleProjection> findDisciplineRuleById(Long id);
 
@@ -41,4 +42,13 @@ public interface DisciplineRuleRepository extends JpaRepository<DisciplineRule, 
             """, countQuery = "SELECT COUNT() FROM discipline_rule  WHERE is_deleted = FALSE",
             nativeQuery = true)
     Page<DisciplineRuleProjection> findDisciplineRulePages(Pageable pageable);
+
+    @Query("""
+            SELECT dr
+            FROM DisciplineRule dr
+            WHERE (:isDeleted IS NULL OR dr.isDeleted = :isDeleted)
+            """)
+    Page<DisciplineRule> findAllByIsDeleted(@Param("isDeleted") Boolean isDeleted, Pageable pageable);
+
+
 }

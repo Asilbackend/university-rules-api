@@ -14,6 +14,7 @@ import uz.tuit.unirules.entity.notification.Notification;
 import uz.tuit.unirules.entity.user.User;
 import uz.tuit.unirules.mapper.NotificationMapper;
 import uz.tuit.unirules.repository.NotificationRepository;
+import uz.tuit.unirules.services.AuthUserService;
 import uz.tuit.unirules.services.user.UserService;
 
 import java.util.List;
@@ -23,11 +24,14 @@ public class NotificationService {
     private final NotificationMapper mapper;
     private final NotificationRepository repository;
     private final UserService userService;
+    private final AuthUserService authUserService;
 
-    public NotificationService(NotificationMapper mapper, NotificationRepository repository, UserService userService) {
+
+    public NotificationService(NotificationMapper mapper, NotificationRepository repository, UserService userService, AuthUserService authUserService) {
         this.mapper = mapper;
         this.repository = repository;
         this.userService = userService;
+        this.authUserService = authUserService;
     }
 
     @Transactional
@@ -65,6 +69,8 @@ public class NotificationService {
                 .orElseThrow(() -> new EntityNotFoundException("notification is not found by id"));
     }
 
+
+    @Transactional
     public ApiResponse<NotificationRespDto> update(Long entityId,
                                                    UpdateNotificationReqDto updateNotificationReqDto) {
         Notification notification = findById(entityId);
@@ -80,6 +86,8 @@ public class NotificationService {
         );
     }
 
+
+    @Transactional
     public ApiResponse<NotificationRespDto> delete(Long entityId) {
         Notification notification = findById(entityId);
         repository.delete(notification);
@@ -113,5 +121,28 @@ public class NotificationService {
 
     public Page<Notification> findAllPage(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    public ApiResponse<NotificationRespDto> getByUserId(Long notificationId) {
+        Notification notification = findById(notificationId);
+        if (notification.getUser().getId().equals(authUserService.getAuthUser().getId())) {
+            readNotification(notification);
+            return new ApiResponse<>(200, "notification", true, mapper.toDto(notification));
+        }
+        throw new RuntimeException("ushbu notification joriy userga tegidhli emas");
+    }
+
+    private void readNotification(Notification notification) {
+        if (!notification.getIs_read()) {
+            notification.setIs_read(true);
+            repository.save(notification);
+        }
+    }
+
+    public ApiResponse<List<NotificationRespDto>> getAllForStudent(Boolean isRead, Pageable pageable) {
+        Long authUserId = authUserService.getAuthUserId();
+        Page<Notification> allByUserIdAndIsRead = repository.findAllByUserIdAndIs_read(authUserId, isRead, pageable);
+        List<NotificationRespDto> list = allByUserIdAndIsRead.stream().map(mapper::toDto).toList();
+        return new ApiResponse<>(200, "notifications", true, list);
     }
 }

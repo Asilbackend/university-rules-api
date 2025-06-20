@@ -8,6 +8,8 @@ import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.services.attachment.AttachmentService;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/attachment")
 public class AttachmentController {
@@ -15,6 +17,18 @@ public class AttachmentController {
 
     public AttachmentController(AttachmentService attachmentService) {
         this.attachmentService = attachmentService;
+    }
+
+    @PostMapping(value = "/saveVideoWithPoster", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ApiResponse<Attachment> saveVideo(@RequestParam("multipartFile") MultipartFile multipartFile) {
+        try {
+            return new ApiResponse<>(200,
+                    "successfully saved video + poster",
+                    true,
+                    attachmentService.saveVideoWithPoster(multipartFile));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -49,6 +63,7 @@ public class AttachmentController {
     public HttpEntity<?> getDocument(@PathVariable String documentName) {
         return attachmentService.getDocumentByName(documentName);
     }
+
     @GetMapping("/otherFiles/{fileName}")
     public HttpEntity<?> getOtherFile(@PathVariable String fileName) {
         return attachmentService.getOtherFile(fileName);

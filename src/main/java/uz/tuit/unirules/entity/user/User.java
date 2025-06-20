@@ -24,7 +24,9 @@ import java.util.List;
  * sertifikat, modul ichidagi videoni baholash, supportga
  * murojaat, notifications
  * */
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_username", columnList = "username")
+})
 public class User extends BaseEntity implements UserDetails {
 
     @Column(nullable = false, length = 50)
@@ -62,5 +64,12 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(role);
+    }
+
+    public String getRoleName() {
+        if (role == null) {
+            throw new RuntimeException("role mavjud emas");
+        }
+        return role.getRole();
     }
 }

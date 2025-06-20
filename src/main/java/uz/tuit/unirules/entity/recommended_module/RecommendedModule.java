@@ -13,8 +13,8 @@ import uz.tuit.unirules.entity.user.User;
 @Setter
 @Entity
 public class RecommendedModule extends BaseEntity {
-    @ManyToOne
-    private User user;
+    @ManyToOne(optional = true)
+    private User user; // user null bolsa hammaga tavsiya etilgan boladi!!!!!
     @ManyToOne
     private Module module;
     private String reason;

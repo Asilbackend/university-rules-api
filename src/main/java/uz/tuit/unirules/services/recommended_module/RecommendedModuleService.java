@@ -15,9 +15,11 @@ import uz.tuit.unirules.entity.recommended_module.RecommendedModule;
 import uz.tuit.unirules.entity.user.User;
 import uz.tuit.unirules.mapper.RecommendedModuleMapper;
 import uz.tuit.unirules.repository.RecommendedModuleRepository;
+import uz.tuit.unirules.services.AuthUserService;
 import uz.tuit.unirules.services.module.ModuleService;
 import uz.tuit.unirules.services.user.UserService;
 
+import java.rmi.AccessException;
 import java.util.List;
 
 @Service
@@ -26,13 +28,15 @@ public class RecommendedModuleService  {
     private final RecommendedModuleMapper recommendedModuleMapper;
     private final UserService userService;
     private final ModuleService moduleService;
+    private final AuthUserService authUserService;
 
     public RecommendedModuleService(RecommendedModuleRepository recommendedModuleRepository,
-                                    RecommendedModuleMapper recommendedModuleMapper, UserService userService, ModuleService moduleService) {
+                                    RecommendedModuleMapper recommendedModuleMapper, UserService userService, ModuleService moduleService, AuthUserService authUserService) {
         this.recommendedModuleRepository = recommendedModuleRepository;
         this.recommendedModuleMapper = recommendedModuleMapper;
         this.userService = userService;
         this.moduleService = moduleService;
+        this.authUserService = authUserService;
     }
 
     @Transactional
@@ -121,5 +125,11 @@ public class RecommendedModuleService  {
 
     public Page<RecommendedModule> findAllPage(Pageable pageable) {
         return recommendedModuleRepository.findAll(pageable);
+    }
+
+    public ApiResponse<List<RecommendedModuleRespDto>> getAllByUserId(Long userId, Pageable pageable) {
+        Page<RecommendedModule> recommendedModules = recommendedModuleRepository.findAllByUserId(userId, pageable);
+        List<RecommendedModuleRespDto> list = recommendedModules.map(recommendedModuleMapper::toDto).toList();
+        return new ApiResponse<>(200, "RecommendedModule", true, list);
     }
 }

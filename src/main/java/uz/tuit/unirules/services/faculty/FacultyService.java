@@ -11,6 +11,7 @@ import uz.tuit.unirules.dto.request_dto.faculty.CreateFacultyReqDto;
 import uz.tuit.unirules.dto.request_dto.faculty.UpdateFacultyReqDto;
 import uz.tuit.unirules.dto.respond_dto.faculty.FacultyRespDto;
 import uz.tuit.unirules.entity.faculty.Faculty;
+import uz.tuit.unirules.handler.exceptions.AlreadyExist;
 import uz.tuit.unirules.mapper.faculty.FacultyMapper;
 import uz.tuit.unirules.repository.faculty.FacultyRepository;
 
@@ -28,21 +29,23 @@ public class FacultyService {
 
     @Transactional
     public ApiResponse<FacultyRespDto> create(CreateFacultyReqDto createFacultyReqDto) {
-        if (facultyRepository.findByName(createFacultyReqDto.name()).isEmpty()) {
-            Faculty faculty = Faculty.builder()
-                    .name(createFacultyReqDto.name())
-                    .description(createFacultyReqDto.description())
-                    .build();
-            facultyRepository.save(faculty);
-            return new ApiResponse<>(
-                    201,
-                    "faculty yaratildi",
-                    true,
-                    facultyMapper.toDto(faculty)
-            );
-        } else {
-            throw new RuntimeException("bunday faculty mavjud");
-        }
+        checkIsEmptyByName(createFacultyReqDto.name());
+        Faculty faculty = Faculty.builder()
+                .name(createFacultyReqDto.name())
+                .description(createFacultyReqDto.description())
+                .build();
+        facultyRepository.save(faculty);
+        return new ApiResponse<>(
+                201,
+                "faculty yaratildi",
+                true,
+                facultyMapper.toDto(faculty)
+        );
+    }
+
+    private void checkIsEmptyByName(String facultyName) {
+        if (facultyRepository.findByName(facultyName).isPresent())
+            throw new AlreadyExist("Bunday nomli faculty allaqachon mavjud");
     }
 
     public ApiResponse<FacultyRespDto> get(Long entityId) {
@@ -62,6 +65,7 @@ public class FacultyService {
 
     @Transactional
     public ApiResponse<FacultyRespDto> update(Long entityId, UpdateFacultyReqDto updateFacultyReqDto) {
+        checkIsEmptyByName(updateFacultyReqDto.name());
         Faculty faculty = findById(entityId);
         faculty.setName(updateFacultyReqDto.name());
         faculty.setDescription(updateFacultyReqDto.description());
@@ -90,7 +94,7 @@ public class FacultyService {
     public ApiResponse<List<FacultyRespDto>> getAll() {
         return new ApiResponse<>(
                 200,
-                " hamma faculty list",
+                "hamma faculty list",
                 true,
                 facultyRepository.findAll().stream().map(facultyMapper::toDto).toList()
         );
