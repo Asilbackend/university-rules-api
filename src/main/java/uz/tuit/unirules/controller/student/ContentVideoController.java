@@ -40,5 +40,4 @@ public class ContentVideoController {
             @RequestHeader HttpHeaders headers) throws IOException {
         return videoService.prepareVideoRegion(attachmentId, headers);
     }
-
 }

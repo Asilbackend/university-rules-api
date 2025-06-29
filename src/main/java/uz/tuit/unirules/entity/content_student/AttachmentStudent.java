@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Min;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.attachment.Attachment;
-import uz.tuit.unirules.entity.user.User;
+
 
 @AllArgsConstructor
 @NoArgsConstructor

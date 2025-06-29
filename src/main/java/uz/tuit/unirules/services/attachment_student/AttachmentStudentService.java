@@ -10,14 +10,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import uz.tuit.unirules.dto.ApiResponse;
-import uz.tuit.unirules.dto.respond_dto.ContentRespDto;
 import uz.tuit.unirules.dto.respond_dto.TopVideo;
 import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.entity.content.Content;
 import uz.tuit.unirules.entity.content_student.AttachmentStudent;
 import uz.tuit.unirules.entity.content_student.ContentStudent;
 import uz.tuit.unirules.entity.user.User;
+import uz.tuit.unirules.projections.RecommendModuleNewProjection;
+import uz.tuit.unirules.projections.TemporaryRequiredContentProjection;
+import uz.tuit.unirules.repository.AttachmentRepository;
 import uz.tuit.unirules.repository.AttachmentStudentRepository;
 import uz.tuit.unirules.repository.ContentRepository;
 import uz.tuit.unirules.repository.UserRepository;
@@ -41,7 +42,7 @@ public class AttachmentStudentService {
                                     UserRepository userRepository, ContentStudentService contentStudentService,
                                     @Qualifier("taskExecutor") TaskExecutor contentTaskExecutor,
                                     ApplicationContext applicationContext,
-                                    ContentRepository contentRepository) {
+                                    ContentRepository contentRepository, AttachmentRepository attachmentRepository) {
         this.authUserService = authUserService;
         this.attachmentStudentRepository = attachmentStudentRepository;
         this.userRepository = userRepository;
@@ -185,5 +186,12 @@ public class AttachmentStudentService {
                 .average()
                 .orElse(0.0);
     }
-
+    @Transactional(readOnly = true)
+    public RecommendModuleNewProjection getRecommendedModuleLast(){
+        return attachmentStudentRepository.findRecommendedLastModule(authUserService.getAuthUserId());
+    }
+    @Transactional(readOnly = true)
+    public TemporaryRequiredContentProjection getRequiredContentProjection(){
+        return attachmentStudentRepository.findLastRequiredContentPro(authUserService.getAuthUserId());
+    }
 }
