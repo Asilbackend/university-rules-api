@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.abs.roles.Role;
 import uz.tuit.unirules.entity.faculty.group.Group;
+import uz.tuit.unirules.entity.news.News;
 
 import java.util.Collection;
 import java.util.List;
@@ -57,6 +58,8 @@ public class User extends BaseEntity implements UserDetails {
     private Boolean isDeleted = false;
     @ManyToOne(optional = true)
     private Group group;
+    @OneToMany(fetch = FetchType.EAGER,mappedBy = "user")
+    private List<News> news;
 
     @ManyToOne
     private Role role;

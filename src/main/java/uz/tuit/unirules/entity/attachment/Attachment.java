@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.content.Content;
+import uz.tuit.unirules.entity.news.News;
 
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class Attachment extends BaseEntity {
     private String fileName;
     @Enumerated(EnumType.STRING)
     private AttachType attachType;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "content_id")
     private Content content;
     @Builder.Default
