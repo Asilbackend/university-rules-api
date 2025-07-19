@@ -21,7 +21,4 @@ public class News extends BaseEntity {
     private Boolean isDeleted=false;
     @ManyToOne(fetch = FetchType.EAGER)
     private Attachment attachment;
-    /*@ManyToOne
-    @Column(name = "user_id")
-    private User user;*/
 }
