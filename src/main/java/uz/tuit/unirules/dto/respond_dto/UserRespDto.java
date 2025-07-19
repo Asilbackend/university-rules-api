@@ -4,6 +4,7 @@ package uz.tuit.unirules.dto.respond_dto;
 import java.io.Serializable;
 
 public record UserRespDto(
+        Long userId,
         String firstname,
         String lastname,
         //todo: String username,

@@ -5,10 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +18,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,6 +27,23 @@ import java.util.UUID;
 public class AttachmentService {
 
     private final AttachmentRepository attachmentRepository;
+    // Map AttachType to MIME types
+    private static final Map<Attachment.AttachType, String> MIME_TYPES = Map.of(
+            Attachment.AttachType.PICTURE, "image/jpeg", // Adjust based on actual file extension if needed
+            Attachment.AttachType.VIDEO, "video/mp4",
+            Attachment.AttachType.AUDIO, "audio/mpeg",
+            Attachment.AttachType.DOCUMENT, "application/pdf", // Default for documents
+            Attachment.AttachType.ANY, MediaType.APPLICATION_OCTET_STREAM_VALUE
+    );
+
+    // Map AttachType to Content-Disposition
+    private static final Map<Attachment.AttachType, String> DISPOSITION_TYPES = Map.of(
+            Attachment.AttachType.PICTURE, "inline",
+            Attachment.AttachType.VIDEO, "inline",
+            Attachment.AttachType.AUDIO, "inline",
+            Attachment.AttachType.DOCUMENT, "attachment",
+            Attachment.AttachType.ANY, "attachment"
+    );
 
     private static final Set<String> IMAGE_EXTENSIONS = Set.of(".jpeg", ".jpg", ".png", ".gif", ".webp");
     private static final Set<String> VIDEO_EXTENSIONS = Set.of(".mp4", ".webm", ".mov");
@@ -77,24 +92,62 @@ public class AttachmentService {
     public Attachment saveFile(MultipartFile file) {
         FileNameAndExtension fileDetails = cleanFileName(file.getOriginalFilename());
         FileConfig fileConfig = determineFileConfig(fileDetails.extension);
-
         Path path = Paths.get(fileConfig.path + fileDetails.fileName);
         String url = fileConfig.url + fileDetails.fileName;
-
-        Attachment attachment = Attachment.builder()
-                .fileName(fileDetails.fileName)
-                .url(url)
-                .attachType(fileConfig.attachType)
-                .build();
-
         try {
             ensureDirectoryExists(path.getParent());
             Files.write(path, file.getBytes());
+            // Video davomiyligini faqat video fayllar uchun olish
+            String videoDuration = fileConfig.attachType == Attachment.AttachType.VIDEO ? getVideoDuration(path.toString()) : "00:00";
+            Attachment attachment = Attachment.builder()
+                    .fileName(fileDetails.fileName)
+                    .url(url)
+                    .attachType(fileConfig.attachType)
+                    .videoDuration(videoDuration)
+                    .build();
             return attachmentRepository.save(attachment);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save file to disk: " + fileDetails.fileName, e);
         } catch (Exception e) {
             throw new RuntimeException("Failed to save file metadata to database", e);
+        }
+    }
+
+    private String getVideoDuration(String filePath) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder(
+                "ffprobe", "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                filePath
+        );
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new IOException("FFprobe failed with exit code: " + exitCode + " for file: " + filePath);
+            }
+            String line = reader.readLine();
+            if (line != null && !line.trim().isEmpty()) {
+                try {
+                    double seconds = Double.parseDouble(line);
+                    if (seconds <= 0) {
+                        return "00:00";
+                    }
+                    int minutes = (int) (seconds / 60);
+                    int remainingSeconds = (int) (seconds % 60);
+                    return String.format("%02d:%02d", minutes, remainingSeconds);
+                } catch (NumberFormatException e) {
+                    throw new IOException("Invalid duration format from FFprobe: " + line + " for file: " + filePath, e);
+                }
+            }
+            return "00:00";
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            throw new IOException("FFprobe process interrupted for file: " + filePath, e);
+        } finally {
+            process.destroy();
         }
     }
 
@@ -121,14 +174,26 @@ public class AttachmentService {
         }
 
         try {
-            String contentType = Files.probeContentType(path);
-            if (contentType == null) {
-                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                // Determine Content-Type
+            String contentType = MIME_TYPES.getOrDefault(attachType, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            // Fallback to probeContentType for PICTURE, DOCUMENT, or ANY if needed
+            if (attachType == Attachment.AttachType.PICTURE ||
+                    attachType == Attachment.AttachType.DOCUMENT ||
+                    attachType == Attachment.AttachType.ANY) {
+                String probedContentType = Files.probeContentType(path);
+                if (probedContentType != null) {
+                    contentType = probedContentType;
+                }
             }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(contentType));
-            headers.setContentDispositionFormData("attachment", fileName);
+            headers.setContentDisposition(ContentDisposition
+                    .builder(DISPOSITION_TYPES.get(attachType))
+                    .filename(fileName)
+                    .build());
+            headers.setCacheControl(CacheControl.noCache().mustRevalidate());
+            headers.setContentLength(Files.size(path)); // Set Content-Length for better client handling
 
             return ResponseEntity.ok()
                     .headers(headers)
@@ -261,7 +326,7 @@ public class AttachmentService {
     private static Process getProcess(Path videoPath, Path imagePath) throws IOException {
         ProcessBuilder pb = new ProcessBuilder(
                 //yuklash oldidan:
-              //  "ffmpeg.exe",
+                //  "ffmpeg.exe",
                 "C:\\Users\\Asilb\\ffmpeg-7.1.1-essentials_build\\bin\\ffmpeg.exe",
                 "-i", videoPath.toAbsolutePath().toString(),
                 "-ss", "00:00:01",

@@ -16,15 +16,14 @@ import java.util.List;
 @Entity
 public class Content extends BaseEntity {
     private String title;
-    @Lob
-    private String body;
     @OneToMany(mappedBy = "content", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Attachment> attachments;
+    private List<ContentElement> contentElements;
     @ManyToOne
     private Module module;// module majburiy bolsa content ham majburiy
     @Builder.Default
     private Boolean isRequired = null;
-    private Double averageContentRating;
+    @Builder.Default
+    private Double averageContentRating=0D;
     @Builder.Default
     private Boolean isDeleted = false;
 

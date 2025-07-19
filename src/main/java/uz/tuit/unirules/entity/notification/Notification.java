@@ -2,6 +2,7 @@ package uz.tuit.unirules.entity.notification;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.lang.Nullable;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.user.User;
 
@@ -12,6 +13,8 @@ import uz.tuit.unirules.entity.user.User;
 @Setter
 @Entity
 public class Notification extends BaseEntity {
+    @ManyToOne
+    private User fromUser;
     @ManyToOne
     private User user;
     private String title;

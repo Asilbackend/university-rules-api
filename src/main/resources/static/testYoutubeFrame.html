@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Video Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #c3ecf7, #dde6f7, #f7c3ec);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .video-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .video-container:hover {
+            transform: scale(1.01);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        iframe {
+            border-radius: 16px;
+            width: 100%;
+            height: 500px;
+            border: none;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-watch-again {
+            display: block;
+            margin: 30px auto 0;
+            padding: 12px 24px;
+            font-weight: bold;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-watch-again:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            iframe {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .video-title {
+                font-size: 22px;
+            }
+
+            iframe {
+                height: 220px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="video-container">
+    <div class="video-title">🎵 Enjoy the Music – YouTube Stream</div>
+    <iframe
+            src="https://www.youtube.com/embed/q5rQmHjB4Rg?autoplay=0&rel=0&modestbranding=1"
+            title="YouTube video player"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+    </iframe>
+    <button class="btn-watch-again" onclick="replayVideo()">🔁 Watch Again</button>
+</div>
+
+<script>
+    function replayVideo() {
+        const iframe = document.querySelector("iframe");
+        const currentSrc = iframe.src;
+        iframe.src = ""; // Unload
+        setTimeout(() => iframe.src = currentSrc, 100); // Reload
+    }
+</script>
+</body>
+</html>

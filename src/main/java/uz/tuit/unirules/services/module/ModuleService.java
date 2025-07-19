@@ -11,7 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.request_dto.ModuleCreateDto;
 import uz.tuit.unirules.entity.modul.Module;
+import uz.tuit.unirules.projections.CertificateProjection;
+import uz.tuit.unirules.projections.ModuleUserProjection;
 import uz.tuit.unirules.repository.ModuleRepository;
+import uz.tuit.unirules.services.AuthUserService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,9 +23,11 @@ import java.util.stream.Stream;
 @Service
 public class ModuleService {
     private final ModuleRepository moduleRepository;
+    private final AuthUserService authUserService;
 
-    public ModuleService(ModuleRepository moduleRepository) {
+    public ModuleService(ModuleRepository moduleRepository, AuthUserService authUserService) {
         this.moduleRepository = moduleRepository;
+        this.authUserService = authUserService;
     }
 
 
@@ -87,7 +92,7 @@ public class ModuleService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<Module> getModuleVisible(Long id) throws AccessDeniedException {
+    public ApiResponse<Module> getModuleVisible(Long id) {
         Module module = findById(id);
         if (module.getModuleState().equals(Module.ModuleState.INVISIBLE)) {
             module = null;
@@ -98,11 +103,11 @@ public class ModuleService {
     }
 
     public Page<Module> getAllPaginationVisible(Pageable pageable) {
-        /*List<Module> visibleModules = all.getContent().stream()
-                .filter(module -> module.getModuleState() != Module.ModuleState.INVISIBLE)
-                .collect(Collectors.toList());
-        return new PageImpl<>(visibleModules, pageable, visibleModules.size());*/
         return moduleRepository.findAllByModuleStateNot(Module.ModuleState.INVISIBLE, pageable);
     }
 
+    public List<ModuleUserProjection> getModulesByUserWithStatus() {
+        Long userId = authUserService.getAuthUserId();
+        return moduleRepository.findUserModules(userId);
+    }
 }

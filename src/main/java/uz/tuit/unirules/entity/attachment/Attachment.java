@@ -14,19 +14,18 @@ import java.util.UUID;
 @Getter
 @Setter
 public class Attachment extends BaseEntity {
-    @Builder.Default
-    private String fileId = UUID.randomUUID().toString();
+    /* @Builder.Default
+     private String fileId = UUID.randomUUID().toString();*/
     private String url;
     @Builder.Default
     private String thumbnailImageUrl = null; //video yoki boshqa katta fayllar uchun rasm
     private String fileName;
     @Enumerated(EnumType.STRING)
     private AttachType attachType;
-    @ManyToOne
-    @JoinColumn(name = "content_id")
-    private Content content;
     @Builder.Default
     private Boolean isDeleted = false;
+    private String title; //sarlavha
+    private String videoDuration;
 
     public enum AttachType {
         VIDEO, PICTURE, AUDIO, DOCUMENT, ANY

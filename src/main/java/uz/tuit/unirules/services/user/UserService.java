@@ -1,47 +1,37 @@
 package uz.tuit.unirules.services.user;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
-import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.CreateUserReqDto;
 import uz.tuit.unirules.dto.request_dto.UpdateUserReqDto;
 import uz.tuit.unirules.dto.respond_dto.UserRespDto;
 import uz.tuit.unirules.entity.abs.roles.Role;
 import uz.tuit.unirules.entity.faculty.group.Group;
 import uz.tuit.unirules.entity.user.User;
-import uz.tuit.unirules.mapper.UserMapper;
+
 import uz.tuit.unirules.projections.UserProjection;
-import uz.tuit.unirules.repository.RoleRepository;
 import uz.tuit.unirules.repository.UserRepository;
-import uz.tuit.unirules.services.attachment.AttachmentService;
-import uz.tuit.unirules.services.discipline_rule.DisciplineRuleService;
 import uz.tuit.unirules.services.AuthUserService;
 import uz.tuit.unirules.services.faculty.GroupService;
 import uz.tuit.unirules.services.role.RoleService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final GroupService groupService;
     private final RoleService roleService;
-    private final RoleRepository roleRepository;
     private final AuthUserService authUserService;
-
-    public UserService(UserRepository userRepository, GroupService groupService, RoleService roleService, RoleRepository roleRepository, AuthUserService authUserService) {
-        this.userRepository = userRepository;
-        this.groupService = groupService;
-        this.roleService = roleService;
-        this.roleRepository = roleRepository;
-        this.authUserService = authUserService;
-    }
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public ApiResponse<UserRespDto> create(CreateUserReqDto createUserReqDto) {
@@ -59,12 +49,13 @@ public class UserService {
                     .email(createUserReqDto.email())
                     .phone(createUserReqDto.phone())
                     .username(createUserReqDto.username())
-                    .password(createUserReqDto.password())
+                    .password(passwordEncoder.encode(createUserReqDto.password()))
                     .group(group)
                     .role(role)
                     .build();
             userRepository.save(user);
             UserRespDto respDto = new UserRespDto(
+                    user.getId(),
                     user.getFirstname(),
                     user.getLastname(),
                     user.getEmail(),
@@ -99,6 +90,7 @@ public class UserService {
 
     private static UserRespDto makeUserRespDtoFromUserProjection(UserProjection userProjection) {
         return new UserRespDto(
+                userProjection.getId(),
                 userProjection.getFirstname(),
                 userProjection.getLastname(),
                 userProjection.getEmail(),
@@ -182,6 +174,7 @@ public class UserService {
 
         Page<UserProjection> usersPage = userRepository.findUsersByGroupId(groupId, pageable);
         List<UserRespDto> dtoList = usersPage.stream().map(user -> new UserRespDto(
+                user.getId(),
                 user.getFirstname(),
                 user.getLastname(),
                 user.getEmail(),
@@ -198,6 +191,7 @@ public class UserService {
                 dtoList
         );
     }
+
     public Page<User> findAllPage(Pageable pageable) {
         return userRepository.findAll(pageable);
     }

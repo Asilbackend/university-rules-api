@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    image: asilbek2004/unirule
+    container_name: unirule_b
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/uni_rule
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 2004
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    volumes:
+      - unirule_template_pictures:/app/src/main/resources/templates/pictures
+      - unirule_template_videos:/app/src/main/resources/templates/videos
+      - unirule_template_documents:/app/src/main/resources/templates/documents
+      - unirule_template_audios:/app/src/main/resources/templates/audios
+      - unirule_template_otherfiles:/app/src/main/resources/templates/otherFiles
+    depends_on:
+      - postgres
+    restart: always
+
+
+  postgres:
+    image: postgres:15
+    container_name: unirule_postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: uni_rule
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2004
+    volumes:
+      - unirule_pgdata:/var/lib/postgresql/data
+
+volumes:
+  unirule_pgdata:
+  unirule_template_pictures:
+  unirule_template_videos:
+  unirule_template_documents:
+  unirule_template_audios:
+  unirule_template_otherfiles:

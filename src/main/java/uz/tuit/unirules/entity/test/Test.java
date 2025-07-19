@@ -20,10 +20,9 @@ public class Test extends BaseEntity {
     private Module module;
     private String title;
     private String description;
+    private Integer durationSecond;
     @Builder.Default
-    private Boolean isDeleted = false;
-    @ManyToOne
-    private Content content;
+    private Boolean isDeleted = false;;
     @OneToMany(mappedBy = "test", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions;
 }

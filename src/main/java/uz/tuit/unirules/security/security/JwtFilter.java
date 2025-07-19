@@ -1,6 +1,7 @@
 package uz.tuit.unirules.security.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import uz.tuit.unirules.dto.ApiResponse;
+import uz.tuit.unirules.handler.ExceptionHandlers;
 
 import java.io.IOException;
 
@@ -63,10 +66,18 @@ public class JwtFilter extends OncePerRequestFilter {
         return null;
     }
 
+
     private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        System.err.println("sendErrorResponse  funksiya ishladi");
-        // response.getWriter().write(gson.toJson(new ApiResponse(message, false)));
+        ExceptionHandlers.ErrorResponse errorResponse = new ExceptionHandlers.ErrorResponse(
+                message,
+                401, null
+        );
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(errorResponse);
+        response.getWriter().write(json);
+        response.getWriter().flush();
     }
+
 }

@@ -16,8 +16,6 @@ import uz.tuit.unirules.entity.test.QuestionOption;
 @Setter
 @Entity
 public class UserTestAnswer extends BaseEntity {
-    @Builder.Default
-    private Integer tryCount = 0;// nechanchi urunishdagi answer?
     @ManyToOne(optional = false)
     private UserTest userTest;
     @ManyToOne

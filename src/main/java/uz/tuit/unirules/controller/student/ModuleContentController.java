@@ -4,10 +4,11 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
-import uz.tuit.unirules.dto.respond_dto.ContentRespDto;
 import uz.tuit.unirules.entity.modul.Module;
+import uz.tuit.unirules.projections.ContentRespProjection;
 import uz.tuit.unirules.services.attachment_student.AttachmentStudentService;
 import uz.tuit.unirules.services.content.ContentService;
 import uz.tuit.unirules.services.module.ModuleService;
@@ -40,9 +41,13 @@ public class ModuleContentController {
     }
 
     @GetMapping("/findContents-byModuleId")
-    public ApiResponse<List<ContentRespDto>> getAllByModuleId(@RequestParam Long moduleId,
-                                                              @ParameterObject Pageable pageable) {
-        return contentService.getAllByModuleId(moduleId, pageable);
+    public List<ContentRespProjection> getAllByModuleId(@RequestParam Long moduleId) {
+        return contentService.getAllByModuleId(moduleId);
+    }
+
+    @GetMapping("/findContentTextByTitle")
+    public String findContentTextByTitle(@RequestParam String title) {
+        return contentService.getTextByTitle(title);
     }
 
     @PostMapping("/rate-content")
@@ -50,5 +55,20 @@ public class ModuleContentController {
                                    @RequestParam Long attachmentId
     ) {
         return attachmentStudentService.ratingVideo(videoRate, attachmentId);
+    }
+
+    @PostMapping("/comment")
+    public ResponseEntity<?> SaveComment(
+            @RequestParam Long attachmentId,
+            @RequestParam String comment) {
+        attachmentStudentService.setComment(attachmentId, comment);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/startContent")
+    public ResponseEntity<?> StartContent(
+            @RequestParam Long contentId) {
+        contentService.startContent(contentId);
+        return ResponseEntity.noContent().build();
     }
 }

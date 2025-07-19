@@ -24,7 +24,7 @@ public class Runner implements CommandLineRunner {
     @Value("${spring.jpa.hibernate.ddl-auto}")
     private String ddl;
     private static Role ADMIN = null;
-    private static Role USER = null;
+    private static Role STUDENT = null;
     private static Role SUPER = null;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
@@ -99,6 +99,18 @@ public class Runner implements CommandLineRunner {
                 .password(passwordEncoder.encode("1"))
                 .build();
         userRepository.save(buildUser);
+
+        User buildUser2 = User.builder()
+                .firstname("Asilbek")
+                .lastname("O'ktamov")
+                .phone("+998919001221")
+                .username("asilbek200")
+                .email("oktamovasilbek270@gmail.com")
+                .active(true)
+                .role(STUDENT)
+                .password(passwordEncoder.encode("award200"))
+                .build();
+        userRepository.save(buildUser2);
     }
 
     private void saveRoles() {
@@ -106,7 +118,7 @@ public class Runner implements CommandLineRunner {
         Role roleStudent = new Role("STUDENT");
         Role roleSuperAdmin = new Role("SUPER_ADMIN");
         ADMIN = roleRepository.save(roleAdmin);
-        USER = roleRepository.save(roleStudent);
+        STUDENT = roleRepository.save(roleStudent);
         SUPER = roleRepository.save(roleSuperAdmin);
     }
 

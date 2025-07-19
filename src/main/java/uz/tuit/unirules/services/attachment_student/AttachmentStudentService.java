@@ -1,71 +1,69 @@
 package uz.tuit.unirules.services.attachment_student;
 
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Qualifier;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.task.TaskExecutor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
+
 import org.springframework.transaction.annotation.Transactional;
-import uz.tuit.unirules.dto.respond_dto.TopVideo;
+
+import uz.tuit.unirules.controller.student.TopVideoProjection;
+
 import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.entity.content.Content;
 import uz.tuit.unirules.entity.content_student.AttachmentStudent;
-import uz.tuit.unirules.entity.content_student.ContentStudent;
-import uz.tuit.unirules.entity.user.User;
-import uz.tuit.unirules.projections.RecommendModuleNewProjection;
+
 import uz.tuit.unirules.projections.TemporaryRequiredContentProjection;
-import uz.tuit.unirules.repository.AttachmentRepository;
-import uz.tuit.unirules.repository.AttachmentStudentRepository;
-import uz.tuit.unirules.repository.ContentRepository;
-import uz.tuit.unirules.repository.UserRepository;
+import uz.tuit.unirules.repository.*;
 import uz.tuit.unirules.services.AuthUserService;
+import uz.tuit.unirules.services.attachment.AttachmentService;
 import uz.tuit.unirules.services.content_student.ContentStudentService;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class AttachmentStudentService {
     private final AuthUserService authUserService;
     private final AttachmentStudentRepository attachmentStudentRepository;
-    private final UserRepository userRepository;
+   /* private final UserRepository userRepository;
     private final ContentStudentService contentStudentService;
     private final TaskExecutor taskExecutor;
     private final ApplicationContext applicationContext;
     private final ContentRepository contentRepository;
-
-
-    public AttachmentStudentService(AuthUserService authUserService, AttachmentStudentRepository attachmentStudentRepository,
-                                    UserRepository userRepository, ContentStudentService contentStudentService,
-                                    @Qualifier("taskExecutor") TaskExecutor contentTaskExecutor,
-                                    ApplicationContext applicationContext,
-                                    ContentRepository contentRepository, AttachmentRepository attachmentRepository) {
-        this.authUserService = authUserService;
-        this.attachmentStudentRepository = attachmentStudentRepository;
-        this.userRepository = userRepository;
-        this.contentStudentService = contentStudentService;
-        this.taskExecutor = contentTaskExecutor;
-        this.applicationContext = applicationContext;
-        this.contentRepository = contentRepository;
-    }
+    private final AttachmentRepository attachmentRepository;*/
+    private final AttachmentService attachmentService;
 
 
     @Transactional
     public void updateVideoPercent(Long authUserId, Long attachmentId, Double percent) {
-        List<AttachmentStudent> attachmentStudents = attachmentStudentRepository.findByStudentIdAndAttachmentId(authUserId, attachmentId);
-        if (attachmentStudents.isEmpty()) {
-            throw new EntityNotFoundException("berilgan qiymatlar boyicha malumot topilmadi");
-        }
-        AttachmentStudent attachmentStudent = attachmentStudents.getLast();
+        AttachmentStudent attachmentStudent = findIfCreateAttachStudent(authUserId, attachmentId);
         if (attachmentStudent.getProgress() <= percent) {
             attachmentStudent.setProgress(percent);
             attachmentStudentRepository.save(attachmentStudent);
         }
     }
 
+    private AttachmentStudent findIfCreateAttachStudent(Long authUserId, Long attachmentId) {
+        List<AttachmentStudent> attachmentStudents = attachmentStudentRepository.findByStudentIdAndAttachmentId(authUserId, attachmentId);
+        if (attachmentStudents.isEmpty()) {
+            return attachmentStudentRepository.save(
+                    AttachmentStudent.builder()
+                            .student(authUserService.getAuthUser())
+                            .attachment(attachmentService.findById(attachmentId))
+                            .build()
+            );
+        } else {
+            return attachmentStudents.getLast();
+        }
+    }
     /*@Transactional(propagation = Propagation.REQUIRES_NEW)
     @Async
     public void createByAttachments(List<Attachment> attachments, Content content) {
@@ -85,14 +83,14 @@ public class AttachmentStudentService {
 
 
     public void asyncCreateByAttachments(List<Attachment> attachments, Content content) {
-        taskExecutor.execute(() -> {
+       /* taskExecutor.execute(() -> {
             // Proxy orqali chaqirish
             AttachmentStudentService self = applicationContext.getBean(AttachmentStudentService.class);
             self.createByAttachments(attachments, content);
-        });
+        });*/
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /*@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createByAttachments(List<Attachment> attachments, Content content) {
         List<User> users = userRepository.findAllByRole("STUDENT");
 
@@ -115,70 +113,36 @@ public class AttachmentStudentService {
             for (Attachment attachment : attachments) {
                 AttachmentStudent as = AttachmentStudent.builder()
                         .attachment(attachment)
-                        .contentStudent(contentStudent)
+                        .student(user)
                         .build();
                 attachmentStudents.add(as);
             }
         }
         // Save all AttachmentStudent in one go
         attachmentStudentRepository.saveAll(attachmentStudents);
+    }*/
+
+    public Page<TopVideoProjection> getTopVideos(Pageable pageable) {
+        return attachmentStudentRepository.findAllTopVideos(Attachment.AttachType.VIDEO.toString(), pageable);
     }
 
-    public List<TopVideo> getTopVideos() {
-        List<TopVideo> topVideos = new ArrayList<>();
-        List<AttachmentStudent> allByRatingDesc = attachmentStudentRepository.findAllByRatingDesc();
-        allByRatingDesc.forEach(attachmentStudent -> {
-            Content content = null;
-            String title = null;
-            try {
-                ContentStudent contentStudent = attachmentStudent.getContentStudent();
-                content = contentStudent.getContent();
-                title = content.getTitle();
-                topVideos.add(new TopVideo(attachmentStudent.getAttachment().getId(),
-                        attachmentStudent.getContentStudent().getContent().getId(),
-                        attachmentStudent.getAttachment().getThumbnailImageUrl(),
-                        title, content.getIsRequired()));
-
-            } catch (Exception ignored) {
-            }
-        });
-        return topVideos;
-    }
-
-    @Transactional//pessimistik lock ishlatildi
+    @Transactional
     public HttpEntity<?> ratingVideo(Integer videoRate, Long attachmentId) {
         validateRatingRange(videoRate); // step 1
         Long userId = authUserService.getAuthUserId();
-        // step 2: attachmentStudent aniqlash
-        List<AttachmentStudent> attachmentStudents = attachmentStudentRepository
-                .findLatestByStudentIdAndAttachmentIdForUpdate(userId, attachmentId);
-        if (attachmentStudents == null || attachmentStudents.isEmpty()) {
-            throw new RuntimeException("AttachmentStudent topilmadi.");
-        }
-        AttachmentStudent attachmentStudent = attachmentStudents.getFirst();
+        AttachmentStudent attachmentStudent = findIfCreateAttachStudent(userId, attachmentId);
         attachmentStudent.setRating(videoRate);
-        // step 3: bazaga yozish
         attachmentStudentRepository.save(attachmentStudent);
-        // step 4: content ni olib, reytingni qayta hisoblash
-        Content content = attachmentStudent.getContentStudent().getContent();
-        List<AttachmentStudent> ratedAttachmentStudents = attachmentStudentRepository
-                .findByContentId(content.getId());
-        double averageRating = calculateAverageRating(ratedAttachmentStudents);
-        content.setAverageContentRating(averageRating);
-        // step 5: saqlash
-        contentRepository.save(content);
         return ResponseEntity.noContent().build();
     }
 
-    // 💡 Rating 1–5 oralig‘ida bo‘lishi kerak
     private void validateRatingRange(Integer rating) {
-        if (rating == null || rating < 1 || rating > 5) {
+        if (rating == null || rating < 1 || rating > 5)
             throw new IllegalArgumentException("videoRate 1 dan 5 gacha bo'lishi kerak!");
-        }
     }
 
-    // 💡 O‘rtacha reytingni hisoblash
-    private double calculateAverageRating(List<AttachmentStudent> ratedList) {
+
+    private double calculateAverageRating(List<AttachmentStudent> ratedList) {// 💡 O‘rtacha reytingni hisoblash
         return ratedList.stream()
                 .map(AttachmentStudent::getRating)
                 .filter(Objects::nonNull)
@@ -186,12 +150,19 @@ public class AttachmentStudentService {
                 .average()
                 .orElse(0.0);
     }
+
     @Transactional(readOnly = true)
-    public RecommendModuleNewProjection getRecommendedModuleLast(){
-        return attachmentStudentRepository.findRecommendedLastModule(authUserService.getAuthUserId());
-    }
-    @Transactional(readOnly = true)
-    public TemporaryRequiredContentProjection getRequiredContentProjection(){
+    public TemporaryRequiredContentProjection getRequiredContentProjection() {
         return attachmentStudentRepository.findLastRequiredContentPro(authUserService.getAuthUserId());
+    }
+
+    public void setComment(Long attachmentId, String comment) {
+        AttachmentStudent attachmentStudent = findIfCreateAttachStudent(attachmentId, authUserService.getAuthUserId());
+        attachmentStudent.setComment(comment);
+        attachmentStudentRepository.save(attachmentStudent);
+    }
+
+    public Page<AttachmentProjection> getLastUpdatedAttachment(Pageable pageable) {
+        return attachmentStudentRepository.findLastUpdatedAttachments(authUserService.getAuthUserId(), pageable);
     }
 }

@@ -25,7 +25,7 @@ public class BaseEntity {
     @UpdateTimestamp
     private Timestamp updatedAt;
     @CreatedBy
-    @ManyToOne
-    private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User createdBy;
 }
 

@@ -5,12 +5,15 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.handler.exceptions.AlreadyExist;
+import uz.tuit.unirules.handler.exceptions.CustomException;
 import uz.tuit.unirules.handler.exceptions.ExamNotStartedException;
 import uz.tuit.unirules.handler.exceptions.JustFinishedExam;
 
@@ -46,19 +49,8 @@ public class ExceptionHandlers {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleUsernameNotFoundException(UsernameNotFoundException e) {
-        e.printStackTrace();
-        ApiResponse<?> response = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), false, null);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<?>> handleBadCredentialsException(BadCredentialsException e) {
-        e.printStackTrace();
-        ApiResponse<?> response = new ApiResponse<>(HttpStatus.UNAUTHORIZED.value(), e.getMessage(), false, null);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
+
 
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ApiResponse<?>> handleJwtException(JwtException e) {
@@ -114,5 +106,50 @@ public class ExceptionHandlers {
         e.printStackTrace();
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "Entity topilmadi: " + e.getMessage(), false, null);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<?> handleCustomException(CustomException ex) {
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(new ErrorResponse(ex.getMessage(), ex.getStatus().value(), ex.getErrorCode()));
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                new ApiResponse<>(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), false, null)
+        );
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<?>> handleBadCredentialsException(BadCredentialsException e) {
+        e.printStackTrace();
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.UNAUTHORIZED.value(), e.getMessage(), false, null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponse<String>> handleDisabled(DisabledException ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                new ApiResponse<>(HttpStatus.FORBIDDEN.value(), ex.getMessage(), false, null)
+        );
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiResponse<String>> handleLocked(LockedException ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                new ApiResponse<>(HttpStatus.FORBIDDEN.value(), ex.getMessage(), false, null)
+        );
+    }
+
+    public record ErrorResponse(
+            String message,
+            Integer status,
+            String errorCode
+    ) {
+
     }
 }

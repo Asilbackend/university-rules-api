@@ -26,10 +26,11 @@ public class ContentStudent extends BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    /**
+   /* *//**
      * User contentni to‘liq o‘qiganmi yoki yo‘q
-     */
-    private boolean isRead = false;
+     *//*
+    @Builder.Default
+    private boolean isRead = false;*/
     /**
      * Contentni to‘liq o‘qib chiqqan vaqt
      */
@@ -41,6 +42,7 @@ public class ContentStudent extends BaseEntity {
     /**
      * ContentService majburiymi user uchun yoki yo‘q
      */
+    @Builder.Default
     private boolean isRequired = false;
 
 
@@ -51,5 +53,6 @@ public class ContentStudent extends BaseEntity {
     }
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private UserContentStatus status = UserContentStatus.NOT_STARTED;
 }

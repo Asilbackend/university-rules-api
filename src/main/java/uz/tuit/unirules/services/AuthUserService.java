@@ -3,8 +3,7 @@ package uz.tuit.unirules.services;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,14 +25,28 @@ public class AuthUserService {
     private final UserRepository userRepository;
 
     public LoginRespDto login(LoginRequestDTO loginRequestDTO) {
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.login(), loginRequestDTO.password()));
-        UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
-        System.out.println("getUsername-------------------------------------------------------------------------------------------------");
-        String accessToken = jwtUtil.generateAccessToken(userDetails.getUsername());
-        System.out.println("generateRefreshToken-------------------------------------------------------------------------------------------------");
-        String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
-        return new LoginRespDto(accessToken, refreshToken);
+        try {
+            Authentication authenticate = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequestDTO.login(),
+                            loginRequestDTO.password()
+                    )
+            );
+            UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
+            String accessToken = jwtUtil.generateAccessToken(userDetails.getUsername());
+            String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
+            return new LoginRespDto(accessToken, refreshToken);
+        } catch (UsernameNotFoundException ex) {
+            throw new UsernameNotFoundException("Login topilmadi"); // 404 yoki 401
+        } catch (BadCredentialsException ex) {
+            throw new BadCredentialsException("Parol noto'g'ri"); // 401
+        } catch (DisabledException ex) {
+            throw new DisabledException("Hisob faollashtirilmagan"); // 403
+        } catch (LockedException ex) {
+            throw new LockedException("Hisob bloklangan"); // 403
+        }
     }
+
 
     public String reLogin(String refreshToken) {
         return jwtUtil.regenerateAccessToken(refreshToken);

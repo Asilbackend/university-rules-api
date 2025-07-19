@@ -13,7 +13,7 @@ public class JwtUtils {
 
     private static final String SECRET = "dfvsbfhaerwiuq3r4qrteworiuyfoiuusfgdaugdshgjdhgahhgjdsagfhjfouds";
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET));
-    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60; // 60 daqiqa
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000  ; // 1 second
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 kun
 
     public String generateAccessToken(String username) {

@@ -1,89 +1,113 @@
 package uz.tuit.unirules.services.content;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.request_dto.ContentCreateDto;
-import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.respond_dto.ContentRespDto;
-import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.entity.content.Content;
-import uz.tuit.unirules.entity.content_student.AttachmentStudent;
+import uz.tuit.unirules.entity.content.ContentElement;
+import uz.tuit.unirules.entity.content.ContentElementRepository;
+
 import uz.tuit.unirules.entity.content_student.ContentStudent;
 import uz.tuit.unirules.entity.modul.Module;
-import uz.tuit.unirules.projections.ContentProjection;
+import uz.tuit.unirules.entity.user.User;
+import uz.tuit.unirules.handler.exceptions.AlreadyExist;
+
+import uz.tuit.unirules.projections.ContentRespProjection;
 import uz.tuit.unirules.repository.AttachmentRepository;
 import uz.tuit.unirules.repository.ContentRepository;
+import uz.tuit.unirules.repository.ContentStudentRepository;
+import uz.tuit.unirules.repository.ModuleRepository;
+import uz.tuit.unirules.services.AuthUserService;
 import uz.tuit.unirules.services.attachment_student.AttachmentStudentService;
 import uz.tuit.unirules.services.module.ModuleService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
-public class ContentService implements SimpleCrud<Long, ContentCreateDto, ContentCreateDto, ContentRespDto> {
+public class ContentService {
     private final ContentRepository contentRepository;
     private final ModuleService moduleService;
     private final AttachmentRepository attachmentRepository;
     private final AttachmentStudentService attachmentStudentService;
+    private final ContentElementRepository contentElementRepository;
+    private final AuthUserService authUserService;
+    private final ContentStudentRepository contentStudentRepository;
+    private final ModuleRepository moduleRepository;
 
-    public ContentService(ContentRepository contentRepository, ModuleService moduleService, AttachmentRepository attachmentRepository, AttachmentStudentService attachmentStudentService) {
+    public ContentService(ContentRepository contentRepository, ModuleService moduleService, AttachmentRepository attachmentRepository, AttachmentStudentService attachmentStudentService,
+                          ContentElementRepository contentElementRepository, AuthUserService authUserService,
+                          ContentStudentRepository contentStudentRepository,
+                          ModuleRepository moduleRepository) {
         this.contentRepository = contentRepository;
         this.moduleService = moduleService;
         this.attachmentRepository = attachmentRepository;
         this.attachmentStudentService = attachmentStudentService;
+        this.contentElementRepository = contentElementRepository;
+        this.authUserService = authUserService;
+        this.contentStudentRepository = contentStudentRepository;
+        this.moduleRepository = moduleRepository;
     }
 
-    @Override
+
     @Transactional
     public ApiResponse<ContentRespDto> create(ContentCreateDto contentCreateDto) {
-        Boolean requiredContent = contentCreateDto.isRequired();
+        boolean requiredContent = false;
         // 1. Modulni olish
         Module module = moduleService.findById(contentCreateDto.moduleId());
         if (module.getModuleState().equals(Module.ModuleState.REQUIRED)) {
             requiredContent = true;
         }
-        // 2. Attachment ID'lar bo‘sh bo‘lmasligini tekshirish
-        List<Attachment> attachments = getAttachmentsByIds(contentCreateDto.attachmentIds());
-
-        // 3. Contentni yaratish (yana Attachmentlar keyin bog‘lanadi)
         Content content = Content.builder()
-                .title(contentCreateDto.title())
-                .body(contentCreateDto.body())
+                .title(contentCreateDto.contentTitle())
                 .module(module)
                 .isRequired(requiredContent)
-                .averageContentRating(
-                        contentCreateDto.averageContentRating() != null
-                                ? contentCreateDto.averageContentRating()
-                                : 0D
-                )
                 .build();
+        List<ContentElement> unsavedCElements = createdContentElements(contentCreateDto.attachmentsAndTitles(), contentCreateDto.titlesAndBodies(), content);
+        content.setContentElements(unsavedCElements);
+        contentRepository.save(content);
+        return new ApiResponse<>(201, "Content is saved", true, null);
+    }
 
-        // 4. Attachmentlarni content bilan bog‘lash (child tarafdan `ManyToOne`)
-        attachments.forEach(attachment -> attachment.setContent(content));
-        // 5. Contentga attachment'larni set qilish (parent tarafdan `OneToMany`)
-        content.setAttachments(attachments);
-        // 6. Contentni saqlash (CascadeType.ALL ishlaydi -> Attachmentlar ham saqlanadi)
-        Content savedContent = contentRepository.save(content);
-        // 7. DTO tayyorlash
-        List<Long> attachmentIds = attachments.stream()
-                .map(Attachment::getId)
-                .toList();
+    private List<ContentElement> createdContentElements(Map<Long, String> attachmentsAndTitles, Map<String, String> titlesAndBodies, Content content) {
+        int i = 0;
 
-        ContentRespDto dto = new ContentRespDto(
-                savedContent.getId(),
-                savedContent.getTitle(),
-                savedContent.getBody(),
-                attachmentIds,
-                module.getId(),
-                savedContent.getAverageContentRating()
-        );
-        attachmentStudentService.asyncCreateByAttachments(attachments, content);
-        return new ApiResponse<>(200, "Content is saved", true, dto);
+        List<ContentElement> unsavedContentElements = new ArrayList<>();
+        for (Long attachId : attachmentsAndTitles.keySet()) {
+
+            Attachment attachment = attachmentRepository.findById(attachId)
+                    .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + attachId));
+            String title = attachmentsAndTitles.get(attachId);
+            if (contentElementRepository.existsByTitle(title)) {
+                throw new AlreadyExist("the title mus tbe unique");
+            }
+            attachment.setTitle(title);
+            attachmentRepository.save(attachment);
+            ContentElement contentElementBuilt = ContentElement.builder()
+                    .orderElement(i++)
+                    .title(title)
+                    .attachment(attachment)
+                    .content(content)
+                    .build();
+            unsavedContentElements.add(contentElementBuilt);
+        }
+        for (String title : titlesAndBodies.keySet()) {
+            if (contentElementRepository.existsByTitle(title)) {
+                throw new AlreadyExist("the title mus tbe unique");
+            }
+            ContentElement contentElementBuilt = ContentElement.builder()
+                    .orderElement(i++)
+                    .title(title)
+                    .text(titlesAndBodies.get(title))
+                    .content(content)
+                    .build();
+            unsavedContentElements.add(contentElementBuilt);
+        }
+        return unsavedContentElements;
     }
 
     private List<Attachment> getAttachmentsByIds(List<Long> attachmentedIds) {
@@ -93,45 +117,85 @@ public class ContentService implements SimpleCrud<Long, ContentCreateDto, Conten
     }
 
 
-    @Override
-    public ApiResponse<ContentRespDto> get(Long entityId) {
-        ContentProjection contentProjection = contentRepository.findContentById(entityId).orElseThrow(() -> new EntityNotFoundException("not found by id = %s".formatted(entityId)));
-        ContentRespDto contentRespDto = makeContentRespDtoFromProjection(contentProjection);
-        return new ApiResponse<>(200, "content", true, contentRespDto);
+    public ApiResponse<?> get(Long entityId) {
+        Content content = findContentById(entityId);
+        return new ApiResponse<>(200, "content", true, content);
     }
 
-    private static ContentRespDto makeContentRespDtoFromProjection(ContentProjection contentProjection) {
+   /* private static ContentRespDto makeContentRespDtoFromProjection(ContentProjection contentProjection) {
         return new ContentRespDto(contentProjection.getId(), contentProjection.getTitle(), contentProjection.getBody(),
                 contentProjection.getAttachmentIds(),
                 contentProjection.getModuleId(),
                 contentProjection.getAverageContentRating()
         );
+    }*/
+
+
+    @Transactional
+    public ApiResponse<ContentRespDto> update(Long contentId, ContentCreateDto contentCreateDto) {
+        // 1. Content ni topish
+        Content content = findContentById(contentId);
+        // 2. Mavjud elementlar va yangi ma'lumotlarni olish
+        List<ContentElement> existingElements = content.getContentElements();
+        Map<String, String> titlesAndBodies = contentCreateDto.titlesAndBodies();
+        Map<Long, String> attachmentsAndTitles = contentCreateDto.attachmentsAndTitles();
+
+        // 3. Yangi va mavjud titleni birlashtirish
+        Set<String> incomingTitles = new HashSet<>(titlesAndBodies.keySet());
+        incomingTitles.addAll(attachmentsAndTitles.values());
+
+        // 4. Mavjud elementlarni yangilash va yangi elementlarni yaratish
+        List<ContentElement> updatedElements = new ArrayList<>();
+        int orderStart = existingElements.size(); // Yangi elementlar uchun tartib raqami
+
+        for (String title : incomingTitles) {
+            // Mavjud elementni izlash
+            Optional<ContentElement> existingElement = existingElements.stream()
+                    .filter(e -> e.getTitle().equals(title))
+                    .findFirst();
+
+            if (existingElement.isPresent()) {
+                // Mavjud elementni yangilash
+                ContentElement element = existingElement.get();
+                String newText = titlesAndBodies.get(title);
+                if (newText != null) {
+                    element.setText(newText); // Text ni yangilash
+                }
+                updatedElements.add(element);
+            } else {
+                // Yangi element yaratish
+                String text = titlesAndBodies.get(title);
+                Attachment attachment = attachmentsAndTitles.entrySet().stream()
+                        .filter(entry -> entry.getValue().equals(title))
+                        .findFirst()
+                        .map(entry -> attachmentRepository.findById(entry.getKey())
+                                .orElseThrow(() -> new EntityNotFoundException("Attachment topilmadi: " + entry.getKey())))
+                        .orElse(null);
+
+                ContentElement newElement = ContentElement.builder()
+                        .title(title)
+                        .text(text)
+                        .attachment(attachment)
+                        .orderElement(orderStart++)
+                        .content(content)
+                        .build();
+                updatedElements.add(newElement);
+            }
+        }
+
+        // 5. Content ni yangi elementlar bilan yangilash
+        content.setContentElements(updatedElements);
+        // 6. Saqlash (orphanRemoval avtomatik ravishda keraksiz elementlarni o'chiradi)
+        contentRepository.save(content);
+        return new ApiResponse<>(200, "Kontent elementlari muvaffaqiyatli sinxronlashtirildi", true, null);
     }
 
-    @Override
-    @Transactional
-    public ApiResponse<ContentRespDto> update(Long entityId, ContentCreateDto contentCreateDto) {
-        Module module = moduleService.findById(contentCreateDto.moduleId());
-        List<Attachment> attachments = getAttachmentsByIds(contentCreateDto.attachmentIds());
-        Content content = findContentById(entityId);
-        try {
-            content.setAverageContentRating(content.getAverageContentRating());
-            content.setTitle(contentCreateDto.title());
-            content.setBody(content.getBody());
-            content.setAttachments(attachments);
-            content.setModule(module);
-            contentRepository.save(content);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return new ApiResponse<>(201, "updated", true, null);
-    }
 
     private Content findContentById(Long entityId) {
         return contentRepository.findById(entityId).orElseThrow(() -> new EntityNotFoundException("not found by id = %s".formatted(entityId)));
     }
 
-    @Override
+
     @Transactional
     public ApiResponse<ContentRespDto> delete(Long entityId) {
         Content content = findContentById(entityId);
@@ -142,14 +206,19 @@ public class ContentService implements SimpleCrud<Long, ContentCreateDto, Conten
         );
     }
 
-    @Override
+
     @Transactional(readOnly = true)
-    public ApiResponse<List<ContentRespDto>> getAll() {
-        List<ContentRespDto> contentRespDtos = contentRepository.findAllContents(false).stream().map(ContentService::makeContentRespDtoFromProjection).toList();
-        return new ApiResponse<>(200, "ContentRespDto", true, contentRespDtos);
+    public ApiResponse<List<?>> getAll(Boolean isDeleted) {
+        List<Content> allContents;
+        if (isDeleted == null) {
+            allContents = contentRepository.findAll();
+        } else {
+            allContents = contentRepository.findAllByIsDeleted(isDeleted);
+        }
+        return new ApiResponse<>(200, "contents", true, allContents);
     }
 
-    @Override
+   /*@Override
     @Transactional(readOnly = true)
     public ApiResponse<List<ContentRespDto>> getAllPagination(Pageable pageable) {
         Page<Content> all = contentRepository.findAll(pageable);
@@ -159,14 +228,45 @@ public class ContentService implements SimpleCrud<Long, ContentCreateDto, Conten
                 contentRespDtos.add(new ContentRespDto(content.getId(), content.getTitle(), content.getBody(), getLongStream(content), content.getModule().getId(), content.getAverageContentRating())
                 ));
         return new ApiResponse<>(200, "Contents", true, contentRespDtos);
-    }
+    }*/
 
     private static List<Long> getLongStream(Content content) {
-        return content.getAttachments().stream().map(BaseEntity::getId).toList();
+        /*return content.getAttachments().stream().map(BaseEntity::getId).toList();*/
+        return null;
     }
 
-    public ApiResponse<List<ContentRespDto>> getAllByModuleId(Long moduleId, Pageable pageable) {
-        List<ContentRespDto> list = contentRepository.findAllByModuleId(moduleId, pageable).map(ContentService::makeContentRespDtoFromProjection).toList();
-        return new ApiResponse<>(200, "Contents", true, list);
+
+    public List<ContentRespProjection> getAllByModuleId(Long moduleId) {
+        return contentRepository.findAllByModuleIdAndUserId(moduleId,authUserService.getAuthUserId());
+    }
+
+    @Transactional(readOnly = true)
+    public String getTextByTitle(String title) {
+        return contentElementRepository.findTextByTitle(title).orElseThrow(() -> new EntityNotFoundException("not found by title: %s".formatted(title)));
+    }
+
+    public void startContent(Long contentId) {
+        ContentStudent contentStudent = findIfCreateContentStudent(contentId);
+        contentStudent.setStatus(ContentStudent.UserContentStatus.IN_PROGRESS);
+        contentStudentRepository.save(contentStudent);
+    }
+
+    private ContentStudent findIfCreateContentStudent(Long contentId) {
+        boolean isRequired = moduleRepository.isRequiredContentByContentId(contentId);
+        User authUser = authUserService.getAuthUser();
+        List<ContentStudent> contentStudents = contentStudentRepository.findByContentIdAndUserId(contentId, authUser.getId());
+        if (contentStudents.isEmpty()) {
+            return contentStudentRepository.save(
+                    ContentStudent.builder()
+                            .user(authUser)
+                            .status(ContentStudent.UserContentStatus.NOT_STARTED)
+                            .content(findContentById(contentId))
+                            .startedAt(LocalDateTime.now())
+                            .isRequired(isRequired)
+                            .build()
+            );
+        } else {
+            return contentStudents.getLast();
+        }
     }
 }

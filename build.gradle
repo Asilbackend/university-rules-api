@@ -12,6 +12,16 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
+bootJar {
+    archiveFileName = 'unirule.jar'
+    mainClass= 'uz.tuit.unirules.UniRulesApplication'
+}
+
+/*jar {
+    archiveBaseName.set("unirule")
+    archiveVersion.set("")
+    archiveClassifier.set("")
+}*/
 
 configurations {
     compileOnly {
@@ -22,6 +32,8 @@ configurations {
 repositories {
     mavenCentral()
 }
+
+
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

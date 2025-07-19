@@ -16,6 +16,7 @@ import uz.tuit.unirules.repository.test.TestRepository;
 import uz.tuit.unirules.services.module.ModuleService;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TestService {
@@ -65,6 +66,7 @@ public class TestService {
         return testRepository.findById(testId).orElseThrow(() ->
                 new EntityNotFoundException("test is not found by this id = %s".formatted(testId)));
     }
+
     public Test findByTestIdAndIsDeletedFalse(Long testId) {
         Test test = testRepository.findById(testId).orElseThrow(() ->
                 new EntityNotFoundException("test is not found by this id = %s".formatted(testId)));
@@ -124,5 +126,9 @@ public class TestService {
                 true,
                 dto
         );
+    }
+
+    public Test findByModuleId(Long moduleId) {
+        return testRepository.findByModuleId(moduleId).orElseThrow(() -> new RuntimeException("Test topilmadi"));
     }
 }

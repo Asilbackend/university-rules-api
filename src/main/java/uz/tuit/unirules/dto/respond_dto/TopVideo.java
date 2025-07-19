@@ -3,7 +3,7 @@ package uz.tuit.unirules.dto.respond_dto;
 public record TopVideo(
         Long attachmentId,
         Long contentId,
-        String posterUrl,
+        String thumbNailUrl,
         String name,
         Boolean isRequired
 ) {

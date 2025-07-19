@@ -1,7 +1,11 @@
 package uz.tuit.unirules.controller.student;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uz.tuit.unirules.dto.respond_dto.TopVideo;
 import uz.tuit.unirules.repository.AttachmentStudentRepository;
@@ -27,7 +31,7 @@ public class HomePageController {
     }
 
     @GetMapping("/topVideos")
-    public List<TopVideo> getTopVideos() {
-        return attachmentStudentService.getTopVideos();
+    public Page<TopVideoProjection> getTopVideos(@ParameterObject Pageable pageable) {
+        return attachmentStudentService.getTopVideos(pageable);
     }
 }

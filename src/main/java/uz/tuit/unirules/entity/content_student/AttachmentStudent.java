@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Min;
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.attachment.Attachment;
+import uz.tuit.unirules.entity.user.User;
 
 
 @AllArgsConstructor
@@ -19,18 +20,22 @@ import uz.tuit.unirules.entity.attachment.Attachment;
 @Setter
 @Entity
 public class AttachmentStudent extends BaseEntity {
+    //uodatedAt orqalia oxirgi marta korilgani kontrol qilinadi
     @ManyToOne
     private Attachment attachment; // content ichidagi attachmentlardan biri bolishi kerak!!
     @ManyToOne
-    private ContentStudent contentStudent;
+    private User student;
     @Min(0)
     @Max(5)
-    private Integer rating;
+    @Builder.Default
+    private Integer rating = null;
     private String comment;
+    private Boolean isRead;
     /**
      * Majburiy contentlar uchun qaysi joygacha o‘qilgani (masalan, % progress, yoki position)
      */
     private Double progress = 0.0;
+
     @PrePersist
     @PreUpdate
     private void validateRatingComment() {

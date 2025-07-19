@@ -1,32 +1,37 @@
 package uz.tuit.unirules.repository;
 
-import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import uz.tuit.unirules.controller.student.TopVideoProjection;
+import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.entity.content_student.AttachmentStudent;
 import uz.tuit.unirules.projections.RecommendModuleNewProjection;
 import uz.tuit.unirules.projections.TemporaryRequiredContentProjection;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AttachmentStudentRepository extends JpaRepository<AttachmentStudent, Long> {
 
 
-    @Query("select ast from AttachmentStudent ast where ast.contentStudent.isDeleted=false and ast.contentStudent.content.isDeleted=false order by ast.rating desc limit 10")
-    List<AttachmentStudent> findAllByRatingDesc();
+    /*@Query("select ast from AttachmentStudent ast where ast.contentStudent.isDeleted=false and ast.contentStudent.content.isDeleted=false order by ast.rating desc limit 10")
+    List<AttachmentStudent> findAllByRatingDesc();*/
 
-    @Query("select ast from AttachmentStudent ast where ast.contentStudent.content.id=:id and ast.contentStudent.isDeleted=false")
+    /*@Query("select ast from AttachmentStudent ast where ast.contentStudent.content.id=:id and ast.contentStudent.isDeleted=false")
     List<AttachmentStudent> findByContentId(Long id);
-    @Query("select ast from AttachmentStudent ast where ast.contentStudent.user.id=:userId and ast.attachment.id=:attachmentId and ast.contentStudent.isDeleted=false")
+*/
+    @Query("select ast from AttachmentStudent ast where ast.student.id=:userId and ast.attachment.id=:attachmentId")
     List<AttachmentStudent> findByStudentIdAndAttachmentId(Long userId, Long attachmentId);
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+
+   /* @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT ast FROM AttachmentStudent ast WHERE ast.attachment.id = :attachmentId AND ast.contentStudent.user.id=:studentId and ast.contentStudent.isDeleted=false ORDER BY ast.createdAt desc")
-    List<AttachmentStudent> findLatestByStudentIdAndAttachmentIdForUpdate(Long studentId, Long attachmentId);
+    List<AttachmentStudent> findLatestByStudentIdAndAttachmentIdForUpdate(Long studentId, Long attachmentId);*/
 
 
-    @Query(value = """
+    /*@Query(value = """
             SELECT c.title               as contentName,
                        rm.reason             as reason,
                        a.id                  as attachmentId,
@@ -38,8 +43,8 @@ public interface AttachmentStudentRepository extends JpaRepository<AttachmentStu
                          left join content c on c.module_id = m.id
                 WHERE us.id =:userId
                 order by a.created_at desc limit 1;
-                """,nativeQuery = true)
-    RecommendModuleNewProjection findRecommendedLastModule(@Param(value = "userId") Long userId);
+                """, nativeQuery = true)
+    RecommendModuleNewProjection findRecommendedLastModule(@Param(value = "userId") Long userId);*/
 
     @Query(value = """
             select
@@ -51,6 +56,31 @@ public interface AttachmentStudentRepository extends JpaRepository<AttachmentStu
             left join users us on ast.user_id = us.id
             where us.id =:id
             order by cs.started_at desc  limit 1;
-            """,nativeQuery = true)
+            """, nativeQuery = true)
     TemporaryRequiredContentProjection findLastRequiredContentPro(@Param(value = "id") Long userId);
+
+    @Query(value = """
+            select ats.attachment_id      as attachmentId,
+                   ats.progress           as progress,
+                   a.title               as title,
+                   a.thumbnail_image_url as thumbnailImageUrl
+            from attachment_student ats
+                     left join attachment a on ats.attachment_id = a.id
+            where ats.student_id = :id
+              and ats.updated_at is not null
+            order by ats.updated_at desc
+            """,
+            nativeQuery = true)
+    Page<AttachmentProjection> findLastUpdatedAttachments(@Param("id") Long userId, Pageable pageable);
+
+    @Query(value = """
+            select a.title               as title,
+                   ats.attachment_id      as attachmentId,
+                   a.thumbnail_image_url as thumbnailImageUrl
+            from attachment_student ats
+                     left join attachment a on ats.attachment_id = a.id
+            where a.attach_type = :at_type
+            order by ats.rating desc nulls last
+            """, nativeQuery = true)
+    Page<TopVideoProjection> findAllTopVideos(String at_type, Pageable pageable);
 }
