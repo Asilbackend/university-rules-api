@@ -1,7 +1,9 @@
 package uz.tuit.unirules.dto.respond_dto;
 
+import lombok.Builder;
 import uz.tuit.unirules.entity.attachment.Attachment;
 import uz.tuit.unirules.entity.content_student.ContentStudent;
+import uz.tuit.unirules.entity.modul.Module;
 
 import java.io.Serializable;
 import java.util.List;
@@ -12,9 +14,10 @@ import java.util.Map;
  */
 public record ContentRespDto(
         Long contentId,
-        ContentStudent.UserContentStatus userContentStatus,
         String title,
-        String type,
-        String videoDuration
+        Module module,// module majburiy bolsa content ham majburiy
+        Boolean isRequired,
+        Double averageContentRating,
+        Boolean isDeleted
 ) implements Serializable {
 }

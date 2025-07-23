@@ -6,6 +6,11 @@ import lombok.*;
 import org.springframework.lang.Nullable;
 import uz.tuit.unirules.entity.abs.BaseEntity;
 import uz.tuit.unirules.entity.attachment.Attachment;
+import uz.tuit.unirules.entity.content_student.ContentStudent;
+import uz.tuit.unirules.entity.user.User;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,6 +26,7 @@ public class ContentElement extends BaseEntity {
     private Attachment attachment;
     @Lob
     @Column(columnDefinition = "TEXT")
+    @Basic(fetch = FetchType.EAGER)
     private String text; //style ga ega text
     private Integer orderElement;
     @ManyToOne(fetch = FetchType.LAZY)

@@ -154,6 +154,9 @@ public class AttachmentService {
     @Transactional
     public Attachment saveVideoWithPoster(MultipartFile file) throws IOException {
         Attachment attachment = saveFile(file);
+        if (!attachment.getAttachType().equals(Attachment.AttachType.VIDEO)) {
+            return attachment;
+        }
         String imageName = UUID.randomUUID() + ".png";
         Path posterPath = Paths.get(imagePath + imageName);
         String posterUrl = imageUrl + imageName;
@@ -174,7 +177,7 @@ public class AttachmentService {
         }
 
         try {
-                // Determine Content-Type
+            // Determine Content-Type
             String contentType = MIME_TYPES.getOrDefault(attachType, MediaType.APPLICATION_OCTET_STREAM_VALUE);
             // Fallback to probeContentType for PICTURE, DOCUMENT, or ANY if needed
             if (attachType == Attachment.AttachType.PICTURE ||

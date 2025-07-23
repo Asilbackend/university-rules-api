@@ -9,12 +9,12 @@ import uz.tuit.unirules.entity.news.News;
 
 @Mapper(componentModel = "spring")
 public interface NewsMapper {
-    @Mapping(target = "newsId",source = "id")
-    @Mapping(target = "attachmentId",source = "attachment",qualifiedByName = "findAttachmentId")
+    @Mapping(target = "newsId", source = "id")
+    @Mapping(target = "attachmentId", source = "attachment", qualifiedByName = "findAttachmentId")
     NewsRespDto toRespDto(News news);
 
     @Named(value = "findAttachmentId")
-    static Long findUserIdByUser(Attachment attachment){
-        return attachment==null?null:attachment.getId();
+    static Long findUserIdByUser(Attachment attachment) {
+        return attachment == null ? null : attachment.getId();
     }
 }

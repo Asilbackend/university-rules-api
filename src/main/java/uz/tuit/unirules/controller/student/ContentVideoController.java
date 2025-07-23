@@ -3,6 +3,7 @@ package uz.tuit.unirules.controller.student;
 
 import org.springframework.core.io.support.ResourceRegion;
 
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
@@ -30,8 +31,8 @@ public class ContentVideoController {
     }
 
     @PutMapping
-    void updateVideoPercent(@RequestParam Long attachmentId, @RequestParam Double percent) {
-        attachmentStudentService.updateVideoPercent(authUserService.getAuthUserId(), attachmentId, percent);
+    void updateVideoPercent(@RequestParam Long attachmentId, @RequestParam Double percent, @RequestParam Long contentId) {
+        attachmentStudentService.updateVideoPercent(authUserService.getAuthUserId(), attachmentId, percent, contentId);
     }
 
     @GetMapping("/{attachmentId}/stream")
@@ -40,5 +41,7 @@ public class ContentVideoController {
             @RequestHeader HttpHeaders headers) throws IOException {
         return videoService.prepareVideoRegion(attachmentId, headers);
     }
+
+
 
 }

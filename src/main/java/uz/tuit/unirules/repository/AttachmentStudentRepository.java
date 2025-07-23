@@ -5,14 +5,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import uz.tuit.unirules.controller.student.TopVideoProjection;
-import uz.tuit.unirules.entity.attachment.Attachment;
+import uz.tuit.unirules.projections.TopVideoProjection;
 import uz.tuit.unirules.entity.content_student.AttachmentStudent;
-import uz.tuit.unirules.projections.RecommendModuleNewProjection;
 import uz.tuit.unirules.projections.TemporaryRequiredContentProjection;
 
 import java.util.List;
-import java.util.Map;
 
 public interface AttachmentStudentRepository extends JpaRepository<AttachmentStudent, Long> {
 

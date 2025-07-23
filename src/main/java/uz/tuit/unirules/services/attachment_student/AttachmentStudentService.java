@@ -3,9 +3,6 @@ package uz.tuit.unirules.services.attachment_student;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.task.TaskExecutor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
@@ -14,17 +11,17 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import uz.tuit.unirules.controller.student.TopVideoProjection;
+import uz.tuit.unirules.projections.TopVideoProjection;
 
 import uz.tuit.unirules.entity.attachment.Attachment;
-import uz.tuit.unirules.entity.content.Content;
+import uz.tuit.unirules.entity.content.*;
 import uz.tuit.unirules.entity.content_student.AttachmentStudent;
 
 import uz.tuit.unirules.projections.TemporaryRequiredContentProjection;
 import uz.tuit.unirules.repository.*;
 import uz.tuit.unirules.services.AuthUserService;
 import uz.tuit.unirules.services.attachment.AttachmentService;
-import uz.tuit.unirules.services.content_student.ContentStudentService;
+import uz.tuit.unirules.services.content.ContentService;
 
 import java.util.*;
 
@@ -33,22 +30,30 @@ import java.util.*;
 public class AttachmentStudentService {
     private final AuthUserService authUserService;
     private final AttachmentStudentRepository attachmentStudentRepository;
-   /* private final UserRepository userRepository;
-    private final ContentStudentService contentStudentService;
-    private final TaskExecutor taskExecutor;
-    private final ApplicationContext applicationContext;
-    private final ContentRepository contentRepository;
-    private final AttachmentRepository attachmentRepository;*/
     private final AttachmentService attachmentService;
+    private final ContentService contentService;
+    private final ContentElementRepository contentElementRepository;
+    private final ContentElementStudentRepository contentElementStudentRepository;
 
 
     @Transactional
-    public void updateVideoPercent(Long authUserId, Long attachmentId, Double percent) {
+    public void updateVideoPercent(Long authUserId, Long attachmentId, Double percent, Long contentId) {
         AttachmentStudent attachmentStudent = findIfCreateAttachStudent(authUserId, attachmentId);
-        if (attachmentStudent.getProgress() <= percent) {
+        if (attachmentStudent.getProgress() <= percent && !attachmentStudent.getIsRead()) {
             attachmentStudent.setProgress(percent);
+            if (percent == 100.0) {
+                Long contentElementId = contentElementRepository.findContentElementIdByContentIdAndAttachmentId(contentId, attachmentId);
+                contentService.readContentElementFromContent(contentElementId);
+                attachmentStudent.setIsRead(true);
+            }
             attachmentStudentRepository.save(attachmentStudent);
         }
+    }
+
+    public ContentElementStudent findByContentElementIdAndStudentId(Long authUserId, Long attachmentId, Long contentId) {
+        Long contentElementId = contentElementRepository.findContentElementIdByContentIdAndAttachmentId(contentId, attachmentId);
+        Optional<ContentElementStudent> contentElementStudentOptional = contentElementStudentRepository.findByContentElementIdAndStudentId(contentElementId, authUserId);
+        return contentElementStudentOptional.orElseThrow();
     }
 
     private AttachmentStudent findIfCreateAttachStudent(Long authUserId, Long attachmentId) {
@@ -156,11 +161,11 @@ public class AttachmentStudentService {
         return attachmentStudentRepository.findLastRequiredContentPro(authUserService.getAuthUserId());
     }
 
-    public void setComment(Long attachmentId, String comment) {
+  /*  public void setComment(Long attachmentId, String comment) {
         AttachmentStudent attachmentStudent = findIfCreateAttachStudent(attachmentId, authUserService.getAuthUserId());
         attachmentStudent.setComment(comment);
         attachmentStudentRepository.save(attachmentStudent);
-    }
+    }*/
 
     public Page<AttachmentProjection> getLastUpdatedAttachment(Pageable pageable) {
         return attachmentStudentRepository.findLastUpdatedAttachments(authUserService.getAuthUserId(), pageable);

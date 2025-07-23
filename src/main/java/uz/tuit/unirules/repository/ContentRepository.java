@@ -3,18 +3,27 @@ package uz.tuit.unirules.repository;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import uz.tuit.unirules.entity.content.Content;
 import uz.tuit.unirules.projections.ContentProjection;
 import uz.tuit.unirules.projections.ContentRespProjection;
+
 
 import java.util.List;
 import java.util.Optional;
 
 public interface ContentRepository extends JpaRepository<Content, Long> {
+    /*@EntityGraph(attributePaths = {"contentElements", "module"})
+    Optional<Content> findByIdAndIsDeletedFalse(Long id);*/
+
+    @Query("select c from Content c join fetch c.contentElements join fetch c.module where c.id=:id")
+    Optional<Content> findByIdFetch(Long id);
+
     /*@Query(value = """
             SELECT
                 c.id AS id,
@@ -55,25 +64,30 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
     Optional<Content> findByIdForUpdate(@Param("id") Long id);
 
     @Query(value = """
-            SELECT c.id    AS contentId,
-                   c.title as contentTitle,
-                   array_agg(
-                           json_strip_nulls(
+            SELECT c.id                               AS contentId,
+                   c.title                            as contentTitle,
+                   coalesce(cs.status, 'NOT_STARTED') as userContentStatus,
+                   c.is_required or cs.is_required    as isRequiredContent,
+                   json_agg(
+                           
                                    json_build_object(
                                            'contentType', CASE
-                                                              WHEN a.id IS NULL THEN 'text'
+                                                              WHEN ce.text is not null THEN 'text'
+                                                              WHEN a.id is null then 'UNKNOWN'
                                                               ELSE a.attach_type
                                        END,
                                            'videoDuration', a.video_duration,
-                                           'isRead', coalesce(ats.is_read, false),
+                                           'isRead', coalesce(ats.is_read or ces.is_read, false),
                                            'title', ce.title,
                                            'order_element', ce.order_element
                                    )
-                           )
-                   )       AS attachmentDetails
+                        
+                   )                                  AS attachmentDetails
             FROM content_element ce
                      LEFT JOIN content c ON ce.content_id = c.id
                      LEFT JOIN attachment a ON ce.attachment_id = a.id
+                     LEFT JOIN content_element_student ces ON ces.content_element_id = ce.id
+                and ces.student_id = :userId
                      LEFT JOIN attachment_student ats on a.id = ats.attachment_id
                 and ats.student_id = :userId
                      LEFT JOIN content_student cs on cs.content_id = c.id
@@ -81,10 +95,11 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
                 AND cs.is_deleted = false
             WHERE c.module_id = :moduleId
               and c.is_deleted = false
-            group by c.id, ce.title, ce.order_element
-            order by ce.order_element;
+            group by c.id, cs.status, cs.is_required
+            order by c.id, min(ce.order_element);
             """, nativeQuery = true)
     List<ContentRespProjection> findAllByModuleIdAndUserId(Long moduleId, Long userId);
 
     List<Content> findAllByIsDeleted(Boolean isDeleted);
+
 }

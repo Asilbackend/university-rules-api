@@ -1,8 +1,6 @@
 package uz.tuit.unirules.entity.content_student;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 
 import lombok.*;
 import uz.tuit.unirules.entity.abs.BaseEntity;
@@ -17,7 +15,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "content_student")
 public class ContentStudent extends BaseEntity {
     @ManyToOne(optional = false)
     private User user;

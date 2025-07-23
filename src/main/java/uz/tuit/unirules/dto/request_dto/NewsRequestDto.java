@@ -5,7 +5,6 @@ import java.io.Serializable;
 public record NewsRequestDto(
         String name,
         String description,
-        String thumbNailUrl,
         Long attachmentId
 ) implements Serializable {
 }
