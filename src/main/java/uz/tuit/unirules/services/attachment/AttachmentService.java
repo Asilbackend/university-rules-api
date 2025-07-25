@@ -14,10 +14,12 @@ import uz.tuit.unirules.repository.AttachmentRepository;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -96,7 +98,11 @@ public class AttachmentService {
         String url = fileConfig.url + fileDetails.fileName;
         try {
             ensureDirectoryExists(path.getParent());
-            Files.write(path, file.getBytes());
+            // Faylni oqim orqali saqlash
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+            }
+            /* Files.write(path, file.getBytes());*/
             // Video davomiyligini faqat video fayllar uchun olish
             String videoDuration = fileConfig.attachType == Attachment.AttachType.VIDEO ? getVideoDuration(path.toString()) : "00:00";
             Attachment attachment = Attachment.builder()
@@ -109,47 +115,15 @@ public class AttachmentService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to save file to disk: " + fileDetails.fileName, e);
         } catch (Exception e) {
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
             throw new RuntimeException("Failed to save file metadata to database", e);
         }
     }
 
-    private String getVideoDuration(String filePath) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(
-                "ffprobe", "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "default=noprint_wrappers=1:nokey=1",
-                filePath
-        );
-        pb.redirectErrorStream(true);
-        Process process = pb.start();
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new IOException("FFprobe failed with exit code: " + exitCode + " for file: " + filePath);
-            }
-            String line = reader.readLine();
-            if (line != null && !line.trim().isEmpty()) {
-                try {
-                    double seconds = Double.parseDouble(line);
-                    if (seconds <= 0) {
-                        return "00:00";
-                    }
-                    int minutes = (int) (seconds / 60);
-                    int remainingSeconds = (int) (seconds % 60);
-                    return String.format("%02d:%02d", minutes, remainingSeconds);
-                } catch (NumberFormatException e) {
-                    throw new IOException("Invalid duration format from FFprobe: " + line + " for file: " + filePath, e);
-                }
-            }
-            return "00:00";
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore interrupted state
-            throw new IOException("FFprobe process interrupted for file: " + filePath, e);
-        } finally {
-            process.destroy();
-        }
-    }
 
     @Transactional
     public Attachment saveVideoWithPoster(MultipartFile file) throws IOException {
@@ -326,13 +300,13 @@ public class AttachmentService {
         }
     }
 
-    private static Process getProcess(Path videoPath, Path imagePath) throws IOException {
+    private  Process getProcess(Path videoPath, Path imagePath) throws IOException {
         ProcessBuilder pb = new ProcessBuilder(
                 //yuklash oldidan:
                 //  "ffmpeg.exe",
-                "C:\\Users\\Asilb\\ffmpeg-7.1.1-essentials_build\\bin\\ffmpeg.exe",
+                "ffmpeg",
                 "-i", videoPath.toAbsolutePath().toString(),
-                "-ss", "00:00:01",
+                "-ss", "00:00:02",
                 "-vframes", "1",
                 "-y",
                 imagePath.toAbsolutePath().toString()
@@ -348,6 +322,44 @@ public class AttachmentService {
             }
         }
         return process;
+    }
+
+    private String getVideoDuration(String filePath) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder(
+                "ffprobe", "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                filePath
+        );
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new IOException("FFprobe failed with exit code: " + exitCode + " for file: " + filePath);
+            }
+            String line = reader.readLine();
+            if (line != null && !line.trim().isEmpty()) {
+                try {
+                    double seconds = Double.parseDouble(line);
+                    if (seconds <= 0) {
+                        return "00:00";
+                    }
+                    int minutes = (int) (seconds / 60);
+                    int remainingSeconds = (int) (seconds % 60);
+                    return String.format("%02d:%02d", minutes, remainingSeconds);
+                } catch (NumberFormatException e) {
+                    throw new IOException("Invalid duration format from FFprobe: " + line + " for file: " + filePath, e);
+                }
+            }
+            return "00:00";
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            throw new IOException("FFprobe process interrupted for file: " + filePath, e);
+        } finally {
+            process.destroy();
+        }
     }
 
     private record FileConfig(String path, String url, Attachment.AttachType attachType) {

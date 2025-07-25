@@ -1,10 +1,7 @@
 package uz.tuit.unirules.entity.content_student;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
@@ -19,6 +16,11 @@ import uz.tuit.unirules.entity.user.User;
 @Getter
 @Setter
 @Entity
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"attachment_id", "student_id"})
+        }
+)
 public class AttachmentStudent extends BaseEntity {
     //uodatedAt orqalia oxirgi marta korilgani kontrol qilinadi
     @ManyToOne
@@ -29,18 +31,9 @@ public class AttachmentStudent extends BaseEntity {
     @Max(5)
     @Builder.Default
     private Integer rating = null;
-    private String comment;
     private Boolean isRead;
     /**
      * Majburiy contentlar uchun qaysi joygacha o‘qilgani (masalan, % progress, yoki position)
      */
     private Double progress = 0.0;
-
-    @PrePersist
-    @PreUpdate
-    private void validateRatingComment() {
-        if (rating != null && rating < 3 && (comment == null || comment.trim().isEmpty())) {
-            throw new IllegalArgumentException("3 dan past baho uchun comment majburiy");
-        }
-    }
 }

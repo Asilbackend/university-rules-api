@@ -15,6 +15,7 @@ public interface ContentElementRepository extends JpaRepository<ContentElement, 
             where ce.title = :title
             """)
     Optional<String> findTextByTitle(String title);
+
     @Query("select ce.id from ContentElement ce where ce.content.id=:contentId and  ce.attachment.id=:attachmentId and ce.content.isDeleted=false")
     Long findContentElementIdByContentIdAndAttachmentId(Long contentId, Long attachmentId);
 
@@ -42,7 +43,7 @@ public interface ContentElementRepository extends JpaRepository<ContentElement, 
                select count (ce.id) from ContentElement ce where ce.content.id=:contentId
                and ce.content.isDeleted=false
             """)
-    Integer countByContentId(Long id);
+    Integer countByContentId(Long contentId);
 
     @Query("""
                select ce from ContentElement ce where ce.content.id=:contentId
@@ -50,4 +51,6 @@ public interface ContentElementRepository extends JpaRepository<ContentElement, 
             """)
     List<ContentElement> findAllByContentId(Long contentId);
 
+    @Query("select ce.content from ContentElement ce where ce.attachment.id=:attachmentId")
+    List<Content> findContentByAttachmentId(Long attachmentId);
 }

@@ -11,7 +11,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             select c.comment,
                    u.firstname,
                    u.lastname,
-                   u.id
+                   u.id as userId
             from comment c
                      join users u on u.id = c.user_id
             where c.attachment_id = :attachmentId

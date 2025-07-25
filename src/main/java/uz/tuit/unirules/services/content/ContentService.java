@@ -278,12 +278,12 @@ public class ContentService {
 
    /*@Override
     @Transactional(readOnly = true)
-    public ApiResponse<List<ContentRespDto>> getAllPagination(Pageable pageable) {
+    public ApiResponse<List<ContentRespRecordDto>> getAllPagination(Pageable pageable) {
         Page<Content> all = contentRepository.findAll(pageable);
         List<Content> list = all.getContent().stream().filter(content -> content.getIsDeleted().equals(false)).toList();
-        List<ContentRespDto> contentRespDtos = new ArrayList<>();
+        List<ContentRespRecordDto> contentRespDtos = new ArrayList<>();
         list.forEach(content ->
-                contentRespDtos.add(new ContentRespDto(content.getId(), content.getTitle(), content.getBody(), getLongStream(content), content.getModule().getId(), content.getAverageContentRating())
+                contentRespDtos.add(new ContentRespRecordDto(content.getId(), content.getTitle(), content.getBody(), getLongStream(content), content.getModule().getId(), content.getAverageContentRating())
                 ));
         return new ApiResponse<>(200, "Contents", true, contentRespDtos);
     }*/
@@ -320,6 +320,8 @@ public class ContentService {
         List<ContentElementStudent> unsavedContentElementStudents = new ArrayList<>();
         List<ContentElement> contentElements = contentElementRepository.findAllByContentId(contentId);
         for (ContentElement contentElement : contentElements) {
+            Optional<ContentElementStudent> elementStudentOptional = contentElementStudentRepository.findByContentElementIdAndStudentId(contentElement.getId(), user.getId());
+            if (elementStudentOptional.isPresent()) continue;
             unsavedContentElementStudents.add(
                     contentElementStudentRepository.save(
                             ContentElementStudent.builder()
@@ -418,9 +420,13 @@ public class ContentService {
 
     public void readContentElementFromContent (Long contentElementId){
         ContentElementStudent contentElementStudent1 = contentElementStudentRepository.findByContentElementIdAndStudentId(contentElementId, authUserService.getAuthUserId()).orElseThrow();
+        if (Objects.equals(contentElementStudent1.getIsRead(), true)) {
+            return;
+        }
         contentElementStudent1.setIsRead(true);
         contentElementStudentRepository.save(contentElementStudent1);
         Content content = contentElementStudent1.getContentElement().getContent();
+
         Integer countRead = contentElementStudentRepository.countByIsReadTrue(content.getId(), authUserService.getAuthUserId());
         Integer all = contentElementRepository.countByContentId(content.getId());
         if (countRead > 0 && Objects.equals(countRead, all)) {

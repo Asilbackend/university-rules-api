@@ -34,6 +34,7 @@ public class AttachmentStudentService {
     private final ContentService contentService;
     private final ContentElementRepository contentElementRepository;
     private final ContentElementStudentRepository contentElementStudentRepository;
+    private final ContentRepository contentRepository;
 
 
     @Transactional
@@ -41,7 +42,7 @@ public class AttachmentStudentService {
         AttachmentStudent attachmentStudent = findIfCreateAttachStudent(authUserId, attachmentId);
         if (attachmentStudent.getProgress() <= percent && !attachmentStudent.getIsRead()) {
             attachmentStudent.setProgress(percent);
-            if (percent == 100.0) {
+            if (percent <= 100.0 && percent >= 95.0) {
                 Long contentElementId = contentElementRepository.findContentElementIdByContentIdAndAttachmentId(contentId, attachmentId);
                 contentService.readContentElementFromContent(contentElementId);
                 attachmentStudent.setIsRead(true);
@@ -69,63 +70,6 @@ public class AttachmentStudentService {
             return attachmentStudents.getLast();
         }
     }
-    /*@Transactional(propagation = Propagation.REQUIRES_NEW)
-    @Async
-    public void createByAttachments(List<Attachment> attachments, Content content) {
-        List<User> users = userRepository.findAllByRole("STUDENT");
-        List<AttachmentStudent> attachmentStudents = new ArrayList<>();
-        for (User user : users) {
-            attachments.forEach(attachment -> {
-                AttachmentStudent build = AttachmentStudent.builder()
-                        .contentStudent(contentStudentService.getSavedContentStudent(content, user))
-                        .attachment(attachment)
-                        .build();
-                attachmentStudents.add(build);
-            });
-        }
-        attachmentStudentRepository.saveAll(attachmentStudents);
-    }*/
-
-
-    public void asyncCreateByAttachments(List<Attachment> attachments, Content content) {
-       /* taskExecutor.execute(() -> {
-            // Proxy orqali chaqirish
-            AttachmentStudentService self = applicationContext.getBean(AttachmentStudentService.class);
-            self.createByAttachments(attachments, content);
-        });*/
-    }
-
-    /*@Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createByAttachments(List<Attachment> attachments, Content content) {
-        List<User> users = userRepository.findAllByRole("STUDENT");
-
-        List<ContentStudent> contentStudents = new ArrayList<>();
-        Map<Long, ContentStudent> userIdToContentStudent = new HashMap<>();
-
-        for (User user : users) {
-            ContentStudent cs = contentStudentService.buildContentStudent(content, user);
-            contentStudents.add(cs);
-            userIdToContentStudent.put(user.getId(), cs); // So we can match later
-        }
-
-        // Save all ContentStudent in one go
-        contentStudentService.saveAll(contentStudents);
-
-        // Now create AttachmentStudents
-        List<AttachmentStudent> attachmentStudents = new ArrayList<>();
-        for (User user : users) {
-            ContentStudent contentStudent = userIdToContentStudent.get(user.getId());
-            for (Attachment attachment : attachments) {
-                AttachmentStudent as = AttachmentStudent.builder()
-                        .attachment(attachment)
-                        .student(user)
-                        .build();
-                attachmentStudents.add(as);
-            }
-        }
-        // Save all AttachmentStudent in one go
-        attachmentStudentRepository.saveAll(attachmentStudents);
-    }*/
 
     public Page<TopVideoProjection> getTopVideos(Pageable pageable) {
         return attachmentStudentRepository.findAllTopVideos(Attachment.AttachType.VIDEO.toString(), pageable);
@@ -138,7 +82,20 @@ public class AttachmentStudentService {
         AttachmentStudent attachmentStudent = findIfCreateAttachStudent(userId, attachmentId);
         attachmentStudent.setRating(videoRate);
         attachmentStudentRepository.save(attachmentStudent);
+
+        calculateAndSetAverageRatingToContent(attachmentId);
         return ResponseEntity.noContent().build();
+    }
+
+    private void calculateAndSetAverageRatingToContent(Long attachmentId) {
+        List<Content> contentList = contentElementRepository.findContentByAttachmentId(attachmentId);
+        if (!contentList.isEmpty()) {
+            Double averageRate = attachmentStudentRepository.calculateAverageRateByAttachmentId(attachmentId);
+            contentList.forEach(content -> {
+                content.setAverageContentRating(averageRate);
+            });
+            contentRepository.saveAll(contentList);
+        }
     }
 
     private void validateRatingRange(Integer rating) {
@@ -160,12 +117,6 @@ public class AttachmentStudentService {
     public TemporaryRequiredContentProjection getRequiredContentProjection() {
         return attachmentStudentRepository.findLastRequiredContentPro(authUserService.getAuthUserId());
     }
-
-  /*  public void setComment(Long attachmentId, String comment) {
-        AttachmentStudent attachmentStudent = findIfCreateAttachStudent(attachmentId, authUserService.getAuthUserId());
-        attachmentStudent.setComment(comment);
-        attachmentStudentRepository.save(attachmentStudent);
-    }*/
 
     public Page<AttachmentProjection> getLastUpdatedAttachment(Pageable pageable) {
         return attachmentStudentRepository.findLastUpdatedAttachments(authUserService.getAuthUserId(), pageable);

@@ -18,6 +18,12 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"content_id", "attachment_id"})
+        }
+)
 public class ContentElement extends BaseEntity {
     @Column(unique = true)
     private String title;// faqat text uchun title

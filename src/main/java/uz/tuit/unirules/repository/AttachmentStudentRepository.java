@@ -75,9 +75,17 @@ public interface AttachmentStudentRepository extends JpaRepository<AttachmentStu
                    ats.attachment_id      as attachmentId,
                    a.thumbnail_image_url as thumbnailImageUrl
             from attachment_student ats
-                     left join attachment a on ats.attachment_id = a.id
-            where a.attach_type = :at_type
+                    join attachment a on ats.attachment_id = a.id
+            where a.attach_type = :at_type and a.is_deleted=false
             order by ats.rating desc nulls last
             """, nativeQuery = true)
     Page<TopVideoProjection> findAllTopVideos(String at_type, Pageable pageable);
+
+    @Query(value = """
+            select avg(ast.rating)
+            from attachment_student ast
+                     join attachment a on ast.attachment_id = a.id
+            where a.id = :attachmentId
+                        """, nativeQuery = true)
+    Double calculateAverageRateByAttachmentId(Long attachmentId);
 }

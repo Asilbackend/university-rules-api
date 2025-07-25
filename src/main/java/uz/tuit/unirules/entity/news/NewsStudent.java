@@ -10,8 +10,12 @@ import uz.tuit.unirules.entity.user.User;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table
 @Entity
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"news_id", "student_id"})
+        }
+)
 public class NewsStudent extends BaseEntity {
     private Boolean isSeen;
     private Boolean isLike;

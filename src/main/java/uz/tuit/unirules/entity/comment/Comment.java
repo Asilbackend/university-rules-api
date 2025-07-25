@@ -19,4 +19,6 @@ public class Comment extends BaseEntity {
     private Attachment attachment;
     @ManyToOne
     private User user;
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

@@ -13,7 +13,6 @@ import uz.tuit.unirules.entity.abs.BaseEntity;
 public class Module extends BaseEntity {
     @Column(nullable = false)
     private String name;
-
     @Column(nullable = false)
     private String description;
     @Enumerated(EnumType.STRING)

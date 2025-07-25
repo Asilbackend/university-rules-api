@@ -22,6 +22,9 @@ public class VideoService {
 
     public ResponseEntity<ResourceRegion> prepareVideoRegion(Long id, HttpHeaders headers) throws IOException {
         Attachment attachment = attachmentService.findById(id);
+        if (attachment.getIsDeleted()) {
+            return null;
+        }
         String fileName = attachment.getFileName();
         Path videoPath = attachmentService.getVideoPath(fileName);
         FileSystemResource video = new FileSystemResource(videoPath);

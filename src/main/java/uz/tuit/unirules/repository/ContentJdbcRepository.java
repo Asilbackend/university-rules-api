@@ -46,7 +46,7 @@ public class ContentJdbcRepository {
                         )                                  AS attachmentDetails
                  FROM content_element ce
                           LEFT JOIN content c ON ce.content_id = c.id
-                          LEFT JOIN attachment a ON ce.attachment_id = a.id
+                          LEFT JOIN attachment a ON ce.attachment_id = a.id and a.is_deleted <> true
                           LEFT JOIN content_element_student ces ON ces.content_element_id = ce.id
                      and ces.student_id = :userId
                           LEFT JOIN attachment_student ats on a.id = ats.attachment_id
