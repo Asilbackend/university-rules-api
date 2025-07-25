@@ -37,17 +37,20 @@ public class RoleController implements SimpleCrud<Long, RoleDto, RoleDto, RoleDt
     }
 
     @Override
+    @PostMapping
     public ApiResponse<RoleDto> create(RoleDto roleDto) {
+        return this.roleService.create(roleDto);
+    }
+
+    @Override
+    @PutMapping("/{id}")
+    public ApiResponse<RoleDto> update(@PathVariable(value = "id")Long entityId, RoleDto roleDto) {
         return null;
     }
 
     @Override
-    public ApiResponse<RoleDto> update(Long entityId, RoleDto roleDto) {
-        return null;
-    }
-
-    @Override
-    public ApiResponse<RoleDto> delete(Long entityId) {
+    @DeleteMapping("/{id}")
+    public ApiResponse<RoleDto> delete(@PathVariable(value = "id") Long entityId) {
         return null;
     }
 }

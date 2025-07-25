@@ -3,7 +3,6 @@ package uz.tuit.unirules.repository;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import uz.tuit.unirules.entity.content.Content;
 import uz.tuit.unirules.projections.ContentProjection;
 import uz.tuit.unirules.projections.ContentRespProjection;
+import uz.tuit.unirules.projections.FuzzySearchProjection;
 
 
 import java.util.List;
@@ -102,4 +102,29 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
 
     List<Content> findAllByIsDeleted(Boolean isDeleted);
 
+    @Query(value = """
+            SELECT
+                     m.id          AS id,
+                     m.name        AS title,
+                     m.description AS description,
+                     'MODULE'      AS source
+              FROM module m
+              WHERE similarity(m.name, :title) > 0.2
+                OR similarity(m.description, :title) > 0.2
+              UNION
+              SELECT c.id      AS id,
+                     c.title   AS title,
+                     NULL      AS description,
+                     'CONTENT' AS source
+              FROM content c
+              WHERE similarity(c.title, :title) > 0.2
+              UNION
+              SELECT ce.id             AS id,
+                     ce.title          AS title,
+                     NULL              AS description,
+                     'CONTENT_ELEMENT' AS source
+              FROM content_element ce
+              WHERE similarity(ce.title, :title) > 0.2;
+                   """, nativeQuery = true)
+    List<FuzzySearchProjection> fuzzySearch(@Param("title") String title);
 }

@@ -1,27 +1,30 @@
 package uz.tuit.unirules.services.content;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.ResponseEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.request_dto.ContentCreateDto;
 import uz.tuit.unirules.dto.respond_dto.ContentRespDto;
 import uz.tuit.unirules.entity.attachment.Attachment;
-import uz.tuit.unirules.entity.comment.CommentRepository;
 import uz.tuit.unirules.entity.content.*;
 
 import uz.tuit.unirules.entity.content_student.ContentStudent;
 import uz.tuit.unirules.entity.modul.Module;
 import uz.tuit.unirules.entity.user.User;
-import uz.tuit.unirules.handler.exceptions.AlreadyExist;
 
 
+import uz.tuit.unirules.projections.FuzzySearchProjection;
 import uz.tuit.unirules.repository.*;
+import uz.tuit.unirules.projections.ContentRespProjection;
+import uz.tuit.unirules.repository.AttachmentRepository;
+import uz.tuit.unirules.repository.ContentRepository;
+import uz.tuit.unirules.repository.ContentStudentRepository;
+import uz.tuit.unirules.repository.ModuleRepository;
 import uz.tuit.unirules.services.AuthUserService;
 
 import uz.tuit.unirules.services.module.ModuleService;
@@ -42,7 +45,6 @@ public class ContentService {
     private final ModuleRepository moduleRepository;
     private final ContentElementStudentRepository contentElementStudentRepository;
     private final ContentJdbcRepository contentJdbcRepository;
-    private final CommentRepository commentRepository;
     private final EntityManager entityManager;
 
 
@@ -68,68 +70,6 @@ public class ContentService {
         return new ApiResponse<>(201, "Content is saved", true, null);
     }
 
-    private List<ContentElement> getContentElementsUnsaved(ContentCreateDto contentCreateDto, Content content) {
-        List<ContentElement> contentElementsUnsaved = new ArrayList<>();
-        List<ContentCreateDto.AttachmentElement> attachmentElements = contentCreateDto.attachmentElements();
-        attachmentElements.forEach(attachmentElement -> {
-            ContentElement build = ContentElement.builder()
-                    .attachment(attachmentRepository.findById(attachmentElement.attachmentId()).orElseThrow())
-                    .title(attachmentElement.title())
-                    .content(content)
-                    .orderElement(attachmentElement.orderElement())
-                    .build();
-            contentElementsUnsaved.add(build);
-
-        });
-        List<ContentCreateDto.TextElement> textElements = contentCreateDto.textElements();
-        textElements.forEach(textElement -> {
-            ContentElement build = ContentElement.builder()
-                    .title(textElement.title())
-                    .content(content)
-                    .orderElement(textElement.orderElement())
-                    .text(textElement.body())
-                    .build();
-            contentElementsUnsaved.add(build);
-        });
-        return contentElementsUnsaved;
-    }
-
-    private List<ContentElement> createdContentElements(Map<Long, String> attachmentsAndTitles, Map<String, String> titlesAndBodies, Content content) {
-        int i = 0;
-
-        List<ContentElement> unsavedContentElements = new ArrayList<>();
-        for (Long attachId : attachmentsAndTitles.keySet()) {
-
-            Attachment attachment = attachmentRepository.findById(attachId)
-                    .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + attachId));
-            String title = attachmentsAndTitles.get(attachId);
-            if (contentElementRepository.existsByTitle(title)) {
-                throw new AlreadyExist("the title mus tbe unique");
-            }
-            attachment.setTitle(title);
-            attachmentRepository.save(attachment);
-            ContentElement contentElementBuilt = ContentElement.builder()
-                    .orderElement(i++)
-                    .title(title)
-                    .attachment(attachment)
-                    .content(content)
-                    .build();
-            unsavedContentElements.add(contentElementBuilt);
-        }
-        for (String title : titlesAndBodies.keySet()) {
-            if (contentElementRepository.existsByTitle(title)) {
-                throw new AlreadyExist("the title mus tbe unique");
-            }
-            ContentElement contentElementBuilt = ContentElement.builder()
-                    .orderElement(i++)
-                    .title(title)
-                    .text(titlesAndBodies.get(title))
-                    .content(content)
-                    .build();
-            unsavedContentElements.add(contentElementBuilt);
-        }
-        return unsavedContentElements;
-    }
 
     private List<Attachment> getAttachmentsByIds(List<Long> attachmentedIds) {
         return attachmentedIds == null || attachmentedIds.isEmpty()
@@ -252,6 +192,33 @@ public class ContentService {
         contentRepository.save(content);*/
     }
 
+    private List<ContentElement> getContentElementsUnsaved(ContentCreateDto contentCreateDto, Content content) {
+        List<ContentElement> contentElementsUnsaved = new ArrayList<>();
+        List<ContentCreateDto.AttachmentElement> attachmentElements = contentCreateDto.attachmentElements();
+        attachmentElements.forEach(attachmentElement -> {
+            ContentElement build = ContentElement.builder()
+                    .attachment(attachmentRepository.findById(attachmentElement.attachmentId()).orElseThrow())
+                    .title(attachmentElement.title())
+                    .content(content)
+                    .orderElement(attachmentElement.orderElement())
+                    .build();
+            contentElementsUnsaved.add(build);
+
+        });
+        List<ContentCreateDto.TextElement> textElements = contentCreateDto.textElements();
+        textElements.forEach(textElement -> {
+            ContentElement build = ContentElement.builder()
+                    .title(textElement.title())
+                    .content(content)
+                    .orderElement(textElement.orderElement())
+                    .text(textElement.body())
+                    .build();
+            contentElementsUnsaved.add(build);
+        });
+        return contentElementsUnsaved;
+    }
+
+
     public void validateContentCreateDto(ContentCreateDto dto) {
         List<String> titles = new ArrayList<>();
         // TextElement title'larini yigish
@@ -311,12 +278,12 @@ public class ContentService {
 
    /*@Override
     @Transactional(readOnly = true)
-    public ApiResponse<List<ContentRespRecordDto>> getAllPagination(Pageable pageable) {
+    public ApiResponse<List<ContentRespDto>> getAllPagination(Pageable pageable) {
         Page<Content> all = contentRepository.findAll(pageable);
         List<Content> list = all.getContent().stream().filter(content -> content.getIsDeleted().equals(false)).toList();
-        List<ContentRespRecordDto> contentRespDtos = new ArrayList<>();
+        List<ContentRespDto> contentRespDtos = new ArrayList<>();
         list.forEach(content ->
-                contentRespDtos.add(new ContentRespRecordDto(content.getId(), content.getTitle(), content.getBody(), getLongStream(content), content.getModule().getId(), content.getAverageContentRating())
+                contentRespDtos.add(new ContentRespDto(content.getId(), content.getTitle(), content.getBody(), getLongStream(content), content.getModule().getId(), content.getAverageContentRating())
                 ));
         return new ApiResponse<>(200, "Contents", true, contentRespDtos);
     }*/
@@ -325,28 +292,31 @@ public class ContentService {
         /*return content.getAttachments().stream().map(BaseEntity::getId).toList();*/
         return null;
     }
-
+    public List<ContentRespProjection> getAllByModuleIdProjection (Long moduleId){
+        return contentRepository.findAllByModuleIdAndUserId(moduleId, authUserService.getAuthUserId());
+    }
 
     public List<?> getAllByModuleId(Long moduleId) {
         /*return  contentRepository.findAllByModuleIdAndUserId(moduleId,authUserService.getAuthUserId());*/
         return contentJdbcRepository.getContentsByModuleIdForPage(moduleId, authUserService.getAuthUserId());
+
+
+
     }
-
     @Transactional
-    public String getTextByTitle(String title) {
-
+    public String getTextByTitle (String title){
         return contentElementRepository.findTextByTitle(title).orElseThrow(() -> new EntityNotFoundException("not found by title: %s".formatted(title)));
     }
 
     @Transactional
-    public void startContent(Long contentId) {
+    public void startContent (Long contentId){
         ContentStudent contentStudent = findIfCreateContentStudent(contentId);
         contentStudent.setStatus(ContentStudent.UserContentStatus.IN_PROGRESS);
         contentStudentRepository.save(contentStudent);
         createContentElementStudents(contentId, contentStudent.getUser());
     }
 
-    private void createContentElementStudents(Long contentId, User user) {
+    private void createContentElementStudents (Long contentId, User user){
         List<ContentElementStudent> unsavedContentElementStudents = new ArrayList<>();
         List<ContentElement> contentElements = contentElementRepository.findAllByContentId(contentId);
         for (ContentElement contentElement : contentElements) {
@@ -363,7 +333,7 @@ public class ContentService {
         contentElementStudentRepository.saveAll(unsavedContentElementStudents);
     }
 
-    private ContentStudent findIfCreateContentStudent(Long contentId) {
+    private ContentStudent findIfCreateContentStudent (Long contentId){
         boolean isRequired = moduleRepository.isRequiredContentByContentId(contentId);
         User authUser = authUserService.getAuthUser();
         List<ContentStudent> contentStudents = findByContentIdAndUserId(contentId, authUser.getId());
@@ -382,12 +352,71 @@ public class ContentService {
         }
     }
 
-    public List<ContentStudent> findByContentIdAndUserId(Long contentId, Long authUserId) {
+
+
+    @Transactional(readOnly = true)
+    public List<FuzzySearchProjection> fuzzySearchContentModuleContentElementByTitle(String title){
+        return contentRepository.fuzzySearch(title);
+    }
+   /* public ResponseEntity<?> fuzzySearchForModuleContentElement (String title){
+        String baseModuleQuery = """
+                SELECT
+                m.id AS moduleId,
+                m.name AS moduleName,
+                m.description AS moduleDescription
+                FROM Module AS m
+                WHERE """;
+        if (title != null && !title.isBlank()) {
+            baseModuleQuery += " LOWER(m.name) LIKE LOWER(CONCAT('%', :title, '%')) SIMILARITY(m.name, :title) > 0.2  OR title ILIKE CONCAT('%', :title, '%') + OR SOUNDEX(m.name) = SOUNDEX(:title) ORDER BY m.name <-> :title;";
+            baseModuleQuery += " LOWER(m.description) LIKE LOWER(CONCAT('%', :title, '%')) SIMILARITY(m.description, :title) > 0.2  OR title ILIKE CONCAT('%', :title, '%') + OR SOUNDEX(m.description) = SOUNDEX(:title) ORDER BY m.description <-> :title;";
+        }
+        String finalModuleQuery = baseModuleQuery;
+        TypedQuery<FuzzySearchProjection> moduleQuery= entityManager.createQuery(finalModuleQuery, FuzzySearchProjection.class);
+
+        List<FuzzySearchProjection> moduleList = moduleQuery.getResultList();
+
+        String baseContentQuery = """
+                SELECT new uz.tuit.unirules.projections.FuzzySearchProjection(
+                c.id,
+                c.title
+                )
+                FROM Content AS c
+                WHERE """;
+        if (title != null && !title.isBlank()) {
+            baseContentQuery += " LOWER(c.title) LIKE LOWER(CONCAT('%', :title, '%')) SIMILARITY(c.title, :title) > 0.2  OR title ILIKE CONCAT('%', :title, '%') + OR SOUNDEX(c.title) = SOUNDEX(:title) ORDER BY c.title <-> :title;";
+        }
+        String finalContentQuery = baseContentQuery;
+        TypedQuery<FuzzySearchProjection> contentQuery= entityManager.createQuery(finalContentQuery, FuzzySearchProjection.class);
+        List<FuzzySearchProjection> contentList = moduleQuery.getResultList();
+
+        String baseContentElementQuery = """
+                SELECT new uz.tuit.unirules.projections.FuzzySearchProjection(
+                ce.id,
+                ce.title,
+                ce.text
+                )
+                FROM ContentElement AS ce
+                WHERE """;
+        if (title != null && !title.isBlank()) {
+            baseContentElementQuery += " LOWER(ce.title) LIKE LOWER(CONCAT('%', :title, '%')) SIMILARITY(ce.title, :title) > 0.2  OR title ILIKE CONCAT('%', :title, '%') + OR SOUNDEX(ce.title) = SOUNDEX(:title) ORDER BY ce.title <-> :title;";
+            baseContentElementQuery += " LOWER(ce.text) LIKE LOWER(CONCAT('%', :title, '%')) SIMILARITY(ce.text, :title) > 0.2  OR title ILIKE CONCAT('%', :title, '%') + OR SOUNDEX(ce.text) = SOUNDEX(:title) ORDER BY ce.text <-> :title;";
+        }
+        String finalContentElementQuery = baseContentElementQuery;
+
+        TypedQuery<FuzzySearchProjection> contentElementQuery= entityManager.createQuery(finalContentElementQuery, FuzzySearchProjection.class);
+
+        List<FuzzySearchProjection> contentElementList = contentElementQuery.getResultList();
+
+
+        return ResponseEntity.ok("ok");
+        return ResponseEntity.ok(contentRepository.fuzzySearch(title));
+    }*/
+    public List<ContentStudent> findByContentIdAndUserId (Long contentId, Long authUserId){
         Optional<ContentStudent> contentStudentOptional = contentStudentRepository.findByContentIdAndUserId(contentId, authUserId);
         return contentStudentOptional.map(List::of).orElseGet(ArrayList::new);
     }
 
-    public void readContentElementFromContent(Long contentElementId) {
+    public void readContentElementFromContent (Long contentElementId){
         ContentElementStudent contentElementStudent1 = contentElementStudentRepository.findByContentElementIdAndStudentId(contentElementId, authUserService.getAuthUserId()).orElseThrow();
         contentElementStudent1.setIsRead(true);
         contentElementStudentRepository.save(contentElementStudent1);

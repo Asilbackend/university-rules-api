@@ -8,6 +8,7 @@ import org.springframework.data.util.Streamable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.tuit.unirules.controller.student.ProfileController;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.request_dto.ModuleCreateDto;
 import uz.tuit.unirules.entity.modul.Module;
@@ -110,4 +111,11 @@ public class ModuleService {
         Long userId = authUserService.getAuthUserId();
         return moduleRepository.findUserModules(userId);
     }
+    public List<ModuleUserProjection> getFilteredModules(ProfileController.UserModuleStatus status) {
+        Long userId = authUserService.getAuthUserId();
+        return moduleRepository.findUserModules(status,userId);
+    }
+
+
+
 }

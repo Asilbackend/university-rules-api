@@ -54,4 +54,13 @@ public class ProfileController {
     public List<ModuleUserProjection> getLastModules() {
         return moduleService.getModulesByUserWithStatus();
     }
+
+    @GetMapping("/filter-by-status")
+    public List<?> getFilteredModules( @RequestParam UserModuleStatus userModuleStatus){
+        return moduleService.getFilteredModules(userModuleStatus);
+    }
+
+    public enum UserModuleStatus {
+        FAILED,IN_PROGRESS,COMPLETED
+    }
 }

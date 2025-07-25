@@ -25,8 +25,17 @@ public class RoleService implements SimpleCrud<Long, RoleDto, RoleDto, RoleDto> 
     }
 
     @Override
+    @Transactional
     public ApiResponse<RoleDto> create(RoleDto roleDto) {
-    return null;
+        Role role = new Role();
+        role.setRole(roleDto.role());
+        roleRepository.save(role);
+        return new ApiResponse<>(
+                201,
+                "role is saved",
+                true,
+                roleMapper.toDto(role)
+        );
     }
 
     @Override
@@ -53,13 +62,30 @@ public class RoleService implements SimpleCrud<Long, RoleDto, RoleDto, RoleDto> 
     }
 
     @Override
+    @Transactional
     public ApiResponse<RoleDto> update(Long entityId, RoleDto roleDto) {
-        return null;
+        Role role = findRoleById(entityId);
+        role.setRole(roleDto.role());
+        roleRepository.save(role);
+        return new ApiResponse<>(
+                200,
+                "role is updated",
+                true,
+                null
+        );
     }
 
     @Override
+    @Transactional
     public ApiResponse<RoleDto> delete(Long entityId) {
-        return null;
+        Role role = findRoleById(entityId);
+        roleRepository.delete(role);
+        return new ApiResponse<>(
+                200,
+                "role is deleted",
+                true,
+                null
+        );
     }
 
     @Override
