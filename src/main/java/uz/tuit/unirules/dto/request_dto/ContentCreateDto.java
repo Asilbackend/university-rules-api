@@ -27,7 +27,8 @@ public record ContentCreateDto(@NotNull Long moduleId,
     public record AttachmentElement(
             String title,
             Long attachmentId,
-            Integer orderElement
+            Integer orderElement,
+            String description
 
     ) {
     }

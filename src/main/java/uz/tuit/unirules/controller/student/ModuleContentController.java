@@ -49,15 +49,21 @@ public class ModuleContentController {
     }
 
     @GetMapping("/findContents-byModuleId")
-    public List<?> getAllByModuleId(@RequestParam Long moduleId) {
+    public List<ContentRespRecordDto> getAllByModuleId(@RequestParam Long moduleId) {
         return contentService.getAllByModuleId(moduleId);
     }
 
     @GetMapping("/findContentTextByTitle")
-    public String findContentTextByTitle(@RequestParam String title, Long contentId) {
+    public String findContentTextByTitle(@RequestParam String title) {
+       /* Long contentElementId = contentElementRepository.findIdByContentIdAndTitle(contentId, title);
+        contentService.readContentElementFromContent(contentElementId);*/
+        return contentService.getTextByTitle(title);
+    }
+
+    @PostMapping("/readTextFromContent")
+    public void readContentTextFromContent(@RequestParam String title, Long contentId) {
         Long contentElementId = contentElementRepository.findIdByContentIdAndTitle(contentId, title);
         contentService.readContentElementFromContent(contentElementId);
-        return contentService.getTextByTitle(title);
     }
 
     @PostMapping("/readFileFromContent")
@@ -66,14 +72,14 @@ public class ModuleContentController {
         contentService.readContentElementFromContent(contentElementId);
     }
 
-    @PostMapping("/rate-content")
+   /* @PostMapping("/rate-content")
     public HttpEntity<?> rateVideo(@RequestParam Integer videoRate,
                                    @RequestParam Long attachmentId
     ) {
         return attachmentStudentService.ratingVideo(videoRate, attachmentId);
-    }
+    }*/
 
-    @PostMapping("/comment")
+ /*   @PostMapping("/comment")
     public ResponseEntity<?> SaveComment(
             @RequestParam Long attachmentId,
             @RequestParam String comment) {
@@ -90,7 +96,7 @@ public class ModuleContentController {
     ) {
         List<CommentProjection> commentProjections = commentService.getComments(lastCommentId, size, attachmentId);
         return ResponseEntity.ok(commentProjections);
-    }
+    }*/
 
     @PostMapping("/startContent")
     public ResponseEntity<?> StartContent(

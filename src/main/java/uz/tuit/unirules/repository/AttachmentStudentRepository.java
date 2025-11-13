@@ -5,11 +5,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import uz.tuit.unirules.projections.TopVideoProjection;
 import uz.tuit.unirules.entity.content_student.AttachmentStudent;
 import uz.tuit.unirules.projections.TemporaryRequiredContentProjection;
+import uz.tuit.unirules.projections.TopVideoProjection;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AttachmentStudentRepository extends JpaRepository<AttachmentStudent, Long> {
 
@@ -21,7 +22,7 @@ public interface AttachmentStudentRepository extends JpaRepository<AttachmentStu
     List<AttachmentStudent> findByContentId(Long id);
 */
     @Query("select ast from AttachmentStudent ast where ast.student.id=:userId and ast.attachment.id=:attachmentId")
-    List<AttachmentStudent> findByStudentIdAndAttachmentId(Long userId, Long attachmentId);
+    Optional<AttachmentStudent> findByStudentIdAndAttachmentId(Long userId, Long attachmentId);
 
    /* @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT ast FROM AttachmentStudent ast WHERE ast.attachment.id = :attachmentId AND ast.contentStudent.user.id=:studentId and ast.contentStudent.isDeleted=false ORDER BY ast.createdAt desc")
@@ -57,27 +58,45 @@ public interface AttachmentStudentRepository extends JpaRepository<AttachmentStu
     TemporaryRequiredContentProjection findLastRequiredContentPro(@Param(value = "id") Long userId);
 
     @Query(value = """
-            select ats.attachment_id      as attachmentId,
-                   ats.progress           as progress,
-                   a.title               as title,
-                   a.thumbnail_image_url as thumbnailImageUrl
+            select ats.attachment_id              as attachmentId,
+                   ats.progress                   as progress,
+                   coalesce(a.title, ce.ce_title) as title,
+                   ce.description                 as description,
+                   a.thumbnail_image_url          as thumbnailImageUrl
             from attachment_student ats
-                     left join attachment a on ats.attachment_id = a.id
+                     join attachment a on ats.attachment_id = a.id
+                     left join lateral (
+                select ce.title as ce_title, ce.description as description
+                from content_element ce
+                where ce.attachment_id = a.id
+                limit 1
+                ) ce on true
             where ats.student_id = :id
               and ats.updated_at is not null
-            order by ats.updated_at desc
+              and a.attach_type = :attachType
+            order by ats.updated_at desc;
             """,
             nativeQuery = true)
-    Page<AttachmentProjection> findLastUpdatedAttachments(@Param("id") Long userId, Pageable pageable);
+    Page<AttachmentProjection> findLastUpdatedAttachments(@Param("id") Long userId, @Param("attachType") String attachType, Pageable pageable);
 
     @Query(value = """
-            select a.title               as title,
-                   ats.attachment_id      as attachmentId,
-                   a.thumbnail_image_url as thumbnailImageUrl
+            select coalesce(a.title, ce.title) as title,
+                   ats.attachment_id           as attachmentId,
+                   a.thumbnail_image_url       as thumbnailImageUrl,
+                   ce.is_required              as required,
+                   ce.description              as description
             from attachment_student ats
-                    join attachment a on ats.attachment_id = a.id
-            where a.attach_type = :at_type and a.is_deleted=false
-            order by ats.rating desc nulls last
+                     join attachment a on ats.attachment_id = a.id
+                     cross join lateral (
+                select ce.title, c.id, c.is_required, ce.description
+                from content_element ce
+                         join content c on ce.content_id = c.id
+                where ce.attachment_id = ats.id
+                limit 1
+                ) ce
+            where a.attach_type = :at_type
+              and a.is_deleted = false
+            order by ats.rating desc nulls last;
             """, nativeQuery = true)
     Page<TopVideoProjection> findAllTopVideos(String at_type, Pageable pageable);
 

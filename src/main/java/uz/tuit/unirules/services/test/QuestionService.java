@@ -3,70 +3,79 @@ package uz.tuit.unirules.services.test;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.request_dto.CreateQuestionReqDto;
+import uz.tuit.unirules.dto.request_dto.UpdateQuestionOptionReqDto;
 import uz.tuit.unirules.dto.request_dto.UpdateQuestionReqDto;
+import uz.tuit.unirules.dto.respond_dto.QuestionOptionRespDto;
 import uz.tuit.unirules.dto.respond_dto.QuestionRespDto;
 import uz.tuit.unirules.entity.test.Question;
-import uz.tuit.unirules.entity.test.QuestionOption;
 import uz.tuit.unirules.entity.test.Test;
 import uz.tuit.unirules.mapper.test.QuestionMapper;
 import uz.tuit.unirules.repository.test.QuestionOptionRepository;
 import uz.tuit.unirules.repository.test.QuestionRepository;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final TestService testService;
-    private final QuestionMapper questionMapper;
-    private final QuestionOptionRepository questionOptionRepository;
 
-    public QuestionService(QuestionRepository questionRepository, TestService testService, QuestionMapper questionMapper, QuestionOptionRepository questionOptionRepository) {
+    private final QuestionOptionService questionOptionService;
+
+    public QuestionService(QuestionRepository questionRepository, TestService testService, QuestionOptionService questionOptionService) {
         this.questionRepository = questionRepository;
         this.testService = testService;
-        this.questionMapper = questionMapper;
-        this.questionOptionRepository = questionOptionRepository;
+        this.questionOptionService = questionOptionService;
     }
 
     @Transactional
-    public ApiResponse<QuestionRespDto> create(CreateQuestionReqDto createReqDto) {
+    public ResponseEntity<?> create(CreateQuestionReqDto createReqDto) {
+        long countTrue = createReqDto.createQuestionOptionReqDtos().stream().filter(q -> q.isCorrect().equals(true)).count();
+        if (countTrue != 1) {
+            throw new RuntimeException("number of correct answer must be one but now n= " + countTrue);
+        }
         Test test = testService.findByTestId(createReqDto.testId());
         Question question = Question.builder()
                 .questionName(createReqDto.questionName())
                 .description(createReqDto.description())
                 .test(test)
                 .build();
-        questionRepository.save(question);
-        QuestionRespDto dto = questionMapper.toRespDto(question);
-        return new ApiResponse<>(
-                201,
-                "saved",
-                true,
-                dto
-        );
-    }
-
-    public List<QuestionOption> findQuestionOptionByIds(List<Long> optionIds) {
-        return optionIds == null || optionIds.isEmpty() ?
-                List.of() :
-                questionOptionRepository.findAllById(optionIds);
+        Question save = questionRepository.save(question);
+        questionOptionService.create(createReqDto.createQuestionOptionReqDtos(), save);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("questionId", save.getId()));
     }
 
     @Transactional(readOnly = true)
     public ApiResponse<QuestionRespDto> get(Long entityId) {
-        Question question = findQuestionById(entityId);
-        QuestionRespDto dto = questionMapper.toRespDto(question);
+        QuestionRespDto questionRespDto = getQuestionRespDto(entityId);
         return new ApiResponse<>(
                 200,
                 "found",
                 true,
-                dto
+                questionRespDto
         );
     }
+
+    private QuestionRespDto getQuestionRespDto(Long questionId) {
+        Question question = findQuestionById(questionId);
+        List<QuestionOptionRespDto> optionRespDtos = question.getOptions().stream()
+                .map(option -> new QuestionOptionRespDto(option.getId(), option.getResult()))
+                .toList();
+        return new QuestionRespDto(
+                question.getId(),
+                question.getQuestionName(),
+                question.getDescription(),
+                optionRespDtos
+        );
+    }
+
 
     public Question findQuestionById(Long questionId) {
         Question question = questionRepository.findById(questionId)
@@ -80,19 +89,28 @@ public class QuestionService {
 
     @Transactional
     public ApiResponse<QuestionRespDto> update(Long id, UpdateQuestionReqDto updateDto) {
-        Test test = testService.findByTestId(updateDto.testId());
+        // ✅ 1. Faqat bitta to‘g‘ri javob bo‘lishi kerakligini tekshirish
+        long correctCount = updateDto.updateQuestionOptionReqDtos()
+                .stream()
+                .filter(UpdateQuestionOptionReqDto::isCorrect)
+                .count();
+
+        if (correctCount != 1) {
+            throw new IllegalArgumentException(
+                    "Exactly one correct answer is required, but found: " + correctCount
+            );
+        }
+
+        // ✅ 2. Questionni olish va ma'lumotlarini yangilash
         Question question = findQuestionById(id);
         question.setQuestionName(updateDto.questionName());
-        question.setTest(test);
         question.setDescription(updateDto.description());
-        questionRepository.save(question);
-        return new ApiResponse<>(
-                200,
-                "updated",
-                true,
-                null
-        );
+
+        // ✅ 3. Variantlarni yangilashni chaqirish (faqat shu joyda bitta save bo‘ladi)
+        questionOptionService.updateOptions(question, updateDto.updateQuestionOptionReqDtos());
+        return new ApiResponse<>(200, "Question updated successfully", true, null);
     }
+
 
     @Transactional
     public ApiResponse<QuestionRespDto> delete(Long id) {
@@ -110,7 +128,7 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public ApiResponse<List<QuestionRespDto>> getAll() {
         List<Question> questions = questionRepository.findAllByIsDeletedFalse();
-        List<QuestionRespDto> dto = questions.stream().map(questionMapper::toRespDto).toList();
+        List<QuestionRespDto> dto = questions.stream().map(question -> getQuestionRespDto(question.getId())).toList();
         return new ApiResponse<>(
                 200,
                 "all questions",
@@ -122,7 +140,7 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public ApiResponse<Page<QuestionRespDto>> getAllPagination(Pageable pageable) {
         Page<Question> questions = questionRepository.findAllByIsDeletedFalse(pageable);
-        Page<QuestionRespDto> dto = questions.map(questionMapper::toRespDto);
+        Page<QuestionRespDto> dto = questions.map(question -> getQuestionRespDto(question.getId()));
         return new ApiResponse<>(
                 200,
                 "all questions",

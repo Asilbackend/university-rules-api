@@ -13,8 +13,10 @@ public interface ContentElementRepository extends JpaRepository<ContentElement, 
             select ce.text
             from ContentElement ce
             where ce.title = :title
+            and
+            ce.content.isDeleted=:deleted
             """)
-    Optional<String> findTextByTitle(String title);
+    Optional<String> findTextByTitle(String title, boolean deleted);
 
     @Query("select ce.id from ContentElement ce where ce.content.id=:contentId and  ce.attachment.id=:attachmentId and ce.content.isDeleted=false")
     Long findContentElementIdByContentIdAndAttachmentId(Long contentId, Long attachmentId);

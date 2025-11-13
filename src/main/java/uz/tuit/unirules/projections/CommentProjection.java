@@ -1,6 +1,8 @@
 package uz.tuit.unirules.projections;
 
 public interface CommentProjection {
+    Long getCommentId();
+
     String getComment();
 
     String getFirstName();
@@ -9,4 +11,5 @@ public interface CommentProjection {
 
     Long getUserId();
 
+    boolean getOwn();
 }

@@ -111,11 +111,12 @@ public class ModuleService {
         Long userId = authUserService.getAuthUserId();
         return moduleRepository.findUserModules(userId);
     }
+
     public List<ModuleUserProjection> getFilteredModules(ProfileController.UserModuleStatus status) {
-        Long userId = authUserService.getAuthUserId();
-        return moduleRepository.findUserModules(status,userId);
+        List<ModuleUserProjection> userModules = getModulesByUserWithStatus();
+        return userModules.stream().filter(
+                moduleUserProjection ->
+                        moduleUserProjection.getUserModuleStatus().equals(status.name())).toList();
     }
-
-
 
 }

@@ -6,13 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.dto.ApiResponse;
-import uz.tuit.unirules.dto.SimpleCrud;
 import uz.tuit.unirules.dto.request_dto.faculty.CreateGroupReqDto;
 import uz.tuit.unirules.dto.request_dto.faculty.UpdateGroupReqDto;
 import uz.tuit.unirules.dto.respond_dto.faculty.GroupRespDto;
 import uz.tuit.unirules.entity.faculty.education_direction.EducationDirection;
 import uz.tuit.unirules.entity.faculty.group.Group;
-import uz.tuit.unirules.handler.exceptions.AlreadyExist;
 import uz.tuit.unirules.mapper.faculty.GroupMapper;
 import uz.tuit.unirules.repository.faculty.GroupRepository;
 

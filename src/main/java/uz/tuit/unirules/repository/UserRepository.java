@@ -22,6 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 u.lastname as lastname,
                 u.email as email,
                 u.phone as phone,
+                u.username as username,
                 u.passed_test as passedTest,
                 u.group_id as groupId,
                 r.role as role
@@ -39,6 +40,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             u.lastname as lastname,
             u.email as email,
             u.phone as phone,
+            u.username as username,
             u.passed_test as passedTest,
             u.group_id as groupId,
             r.role as role
@@ -56,6 +58,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             u.lastname as lastname,
             u.email as email,
             u.phone as phone,
+            u.username as username,
             u.passed_test as passedTest,
             u.group_id as groupId,
             u.is_deleted as isDeleted
@@ -75,6 +78,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 u.lastname,
                 u.email,
                 u.phone,
+                u.username,
                 u.language,
                 u.passed_test as passedTest,
                 u.group_id as groupId,

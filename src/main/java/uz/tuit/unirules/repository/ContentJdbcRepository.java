@@ -35,7 +35,7 @@ public class ContentJdbcRepository {
                                         'attachmentId', a.id,
                                         'title', ce.title,
                                         'contentType', CASE
-                                                           WHEN ce.text is not null THEN 'text'
+                                                           WHEN ce.text is not null THEN 'TEXT'
                                                            WHEN a.attach_type is null then 'UNKNOWN'
                                                            ELSE a.attach_type
                                             END,

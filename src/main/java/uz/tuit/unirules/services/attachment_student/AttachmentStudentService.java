@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.projections.TopVideoProjection;
 
 import uz.tuit.unirules.entity.attachment.Attachment;
@@ -58,17 +59,13 @@ public class AttachmentStudentService {
     }
 
     private AttachmentStudent findIfCreateAttachStudent(Long authUserId, Long attachmentId) {
-        List<AttachmentStudent> attachmentStudents = attachmentStudentRepository.findByStudentIdAndAttachmentId(authUserId, attachmentId);
-        if (attachmentStudents.isEmpty()) {
-            return attachmentStudentRepository.save(
-                    AttachmentStudent.builder()
-                            .student(authUserService.getAuthUser())
-                            .attachment(attachmentService.findById(attachmentId))
-                            .build()
-            );
-        } else {
-            return attachmentStudents.getLast();
-        }
+        Optional<AttachmentStudent> optionalAttachmentStudent = attachmentStudentRepository.findByStudentIdAndAttachmentId(authUserId, attachmentId);
+        return optionalAttachmentStudent.orElseGet(() -> attachmentStudentRepository.save(
+                AttachmentStudent.builder()
+                        .student(authUserService.getAuthUser())
+                        .attachment(attachmentService.findById(attachmentId))
+                        .build()
+        ));
     }
 
     public Page<TopVideoProjection> getTopVideos(Pageable pageable) {
@@ -119,6 +116,16 @@ public class AttachmentStudentService {
     }
 
     public Page<AttachmentProjection> getLastUpdatedAttachment(Pageable pageable) {
-        return attachmentStudentRepository.findLastUpdatedAttachments(authUserService.getAuthUserId(), pageable);
+        return attachmentStudentRepository.findLastUpdatedAttachments(authUserService.getAuthUserId(), Attachment.AttachType.VIDEO.name(), pageable);
+    }
+
+    public HttpEntity<?> getUserRatingVideo(Long attachmentId) {
+        Long userId = authUserService.getAuthUserId();
+        AttachmentStudent attachmentStudent = findIfCreateAttachStudent(userId, attachmentId);
+        Integer rating = attachmentStudent.getRating();
+        Map<String, Integer> userVideoRating = new HashMap<>();
+        userVideoRating.put("userVideoRating", rating); // bu holda null ruxsat etiladi
+        ApiResponse<Map<String, Integer>> resp = new ApiResponse<>(200, "success", true, userVideoRating);
+        return ResponseEntity.ok(resp);
     }
 }

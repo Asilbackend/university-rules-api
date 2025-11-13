@@ -10,6 +10,7 @@ public record UserRespDto(
         //todo: String username,
         String email,
         String phone,
+        String username,
         String language,
         boolean passedTest,
         Long groupId,

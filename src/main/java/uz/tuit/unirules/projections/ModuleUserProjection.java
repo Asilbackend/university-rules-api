@@ -7,6 +7,8 @@ public interface ModuleUserProjection {
 
     String getModuleDescription();
 
+    String getModuleState();
+
     Integer getModuleTestResult();
 
     String getUserModuleStatus();// PENDING, COMPLETED

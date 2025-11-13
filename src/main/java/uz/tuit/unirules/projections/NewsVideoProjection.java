@@ -5,7 +5,9 @@ public interface NewsVideoProjection {
 
     String getThumbNailUrl();
 
-    String getLikeCount();
+    String getVideoUrl();
+
+    Integer getLikeCount();
 
     boolean getIsLiked();
 
@@ -14,4 +16,6 @@ public interface NewsVideoProjection {
     String getDescription();
 
     String getVideoDuration();
+
+    Integer getSeenCount();
 }

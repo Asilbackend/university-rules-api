@@ -3,6 +3,9 @@ package uz.tuit.unirules.controller.test;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.request_dto.CreateQuestionReqDto;
@@ -22,8 +25,16 @@ public class QuestionController {
     }
 
     @PostMapping
-    public ApiResponse<QuestionRespDto> create(@RequestBody CreateQuestionReqDto dto) {
+    public HttpEntity<?> create(@RequestBody CreateQuestionReqDto dto) {
         return this.questionService.create(dto);
+    }
+
+    @PostMapping("/createAll")
+    public HttpEntity<?> createAll(@RequestBody List<CreateQuestionReqDto> dtos) {
+        for (CreateQuestionReqDto dto : dtos) {
+            questionService.create(dto);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/{id}")

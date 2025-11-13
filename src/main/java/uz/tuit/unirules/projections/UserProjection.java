@@ -10,6 +10,7 @@ public interface UserProjection {
     String getEmail();
 
     String getPhone();
+    String getUsername();
 
     String getLanguage();
 

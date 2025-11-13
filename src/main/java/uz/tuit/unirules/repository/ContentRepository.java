@@ -72,7 +72,7 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
                            
                                    json_build_object(
                                            'contentType', CASE
-                                                              WHEN ce.text is not null THEN 'text'
+                                                              WHEN ce.text is not null THEN 'TEXT'
                                                               WHEN a.id is null then 'UNKNOWN'
                                                               ELSE a.attach_type
                                        END,

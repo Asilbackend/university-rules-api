@@ -33,11 +33,15 @@ public class TestService {
     @Transactional
     public ApiResponse<TestRespDto> create(CreateTestReqDto dto) {
         // moduleni olib kelish
+        if (testRepository.findByModuleId(dto.moduleId()).isPresent()) {
+            throw new RuntimeException("test already exist by moduleId=" + dto.moduleId());
+        }
         Module module = moduleService.findById(dto.moduleId());
         Test test = Test.builder()
                 .description(dto.description())
                 .title(dto.title())
                 .module(module)
+                .durationSecond(dto.durationSecond())
                 .build();
         testRepository.save(test);
         TestRespDto respDto = testMapper.toRespDto(test);
@@ -79,6 +83,13 @@ public class TestService {
     @Transactional
     public ApiResponse<TestRespDto> update(Long id, UpdateTestReqDto dto) {
         Test test = findByTestIdAndIsDeletedFalse(id);
+        Optional<Test> optionalTest = testRepository.findByModuleId(dto.moduleId());
+        if (optionalTest.isPresent()) {
+            Test test1 = optionalTest.get();
+            if (!test1.getId().equals(test.getId())) {
+                throw new RuntimeException("test already exist by moduleId=" + dto.moduleId());
+            }
+        }
         Module module = moduleService.findById(dto.moduleId());
         test.setModule(module);
         test.setTitle(dto.title());
@@ -129,6 +140,12 @@ public class TestService {
     }
 
     public Test findByModuleId(Long moduleId) {
-        return testRepository.findByModuleId(moduleId).orElseThrow(() -> new RuntimeException("Test topilmadi"));
+        return testRepository.findByModuleId(moduleId).orElseThrow(() -> new EntityNotFoundException("Test topilmadi"));
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<TestRespDto> getByModuleId(Long moduleId) {
+        Test test = findByModuleId(moduleId);
+        return get(test.getId());
     }
 }

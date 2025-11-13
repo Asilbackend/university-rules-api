@@ -1,5 +1,6 @@
 package uz.tuit.unirules.controller.test;
 
+import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import uz.tuit.unirules.dto.respond_dto.TestRespDto;
 import uz.tuit.unirules.services.test.TestService;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/test")
 public class TestController {
@@ -21,7 +23,7 @@ public class TestController {
     }
 
     @PostMapping
-    public ApiResponse<TestRespDto> create( @RequestBody CreateTestReqDto createReqDto) {
+    public ApiResponse<TestRespDto> create(@RequestBody @Valid CreateTestReqDto createReqDto) {
         return testService.create(createReqDto);
     }
 
@@ -30,9 +32,14 @@ public class TestController {
         return testService.get(id);
     }
 
+    @GetMapping("/module")
+    public ApiResponse<TestRespDto> getByModuleId(@RequestParam Long moduleId) {
+        return testService.getByModuleId(moduleId);
+    }
+
     @PutMapping("/{id}")
-    public ApiResponse<TestRespDto> update(@PathVariable Long id,@RequestBody UpdateTestReqDto updateReqDto) {
-        return testService.update(id,updateReqDto);
+    public ApiResponse<TestRespDto> update(@PathVariable Long id, @RequestBody UpdateTestReqDto updateReqDto) {
+        return testService.update(id, updateReqDto);
     }
 
     @DeleteMapping("/{id}")

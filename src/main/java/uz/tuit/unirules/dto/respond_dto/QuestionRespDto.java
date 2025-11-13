@@ -7,7 +7,6 @@ public record QuestionRespDto(
         Long questionId,
         String questionName,
         String description,
-        List<Long> optionIds,
-        Long testId
+        List<QuestionOptionRespDto> optionRespDtos
 ) implements Serializable {
 }

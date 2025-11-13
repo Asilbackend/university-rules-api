@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface NewsStudentRepository extends JpaRepository<NewsStudent, Long> {
-    @Query("select n from NewsStudent  n where n.student.id=:userId and n.id=:newsId and n.news.isDeleted=false")
+    @Query("select n from NewsStudent  n where n.news.id=:newsId and n.student.id=:userId")
     Optional<NewsStudent> findByNewsIdAndStudentId(Long newsId, Long userId);
 }

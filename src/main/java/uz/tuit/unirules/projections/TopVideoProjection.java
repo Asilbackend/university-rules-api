@@ -5,5 +5,9 @@ public interface TopVideoProjection {
 
     Long getAttachmentId();
 
-    String getThumbnailUrl();
+    String getThumbnailImageUrl();
+
+    boolean getRequired();
+
+    String getDescription();
 }

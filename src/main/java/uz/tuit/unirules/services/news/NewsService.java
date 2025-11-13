@@ -113,15 +113,16 @@ public class NewsService {
     }
 
 
-    public List<AttachmentNewsProjection> getNextNews(LocalDateTime lastCreatedAt, int size) {
+    public List<AttachmentNewsProjection> getNextNews(Long lastId, int size) {
         Long authUserId = authUserService.getAuthUserId();
-        if (lastCreatedAt == null) {
-            return newsRepository.findNextStoriesNative(LocalDateTime.MIN, size, true, authUserId);
+        if (lastId == null) {
+            return newsRepository.findNextStoriesNative(0L, size, true, authUserId);
         } else {
-            return newsRepository.findNextStoriesNative(lastCreatedAt, size, false, authUserId);
+            return newsRepository.findNextStoriesNative(lastId, size, false, authUserId);
         }
     }
 
+    @Transactional
     public NewsVideoProjection getNews(Long newsId) {
         NewsStudent newsStudent = newsStudentService.findIfCreate(newsId, authUserService.getAuthUserId());
         if (!newsStudent.getIsSeen()) {
@@ -131,6 +132,7 @@ public class NewsService {
         return newsRepository.findNewsVideoInfo(newsId, authUserService.getAuthUserId()).orElseThrow();
     }
 
+    @Transactional
     public void like(Long newsId) {
         NewsStudent newsStudent = newsStudentService.findIfCreate(newsId, authUserService.getAuthUserId());
         newsStudent.setIsLike(!newsStudent.getIsLike());

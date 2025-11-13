@@ -25,13 +25,13 @@ public class NewsPageController {
     }*/
 
     @GetMapping("/getNext")
-    public List<AttachmentNewsProjection> getNextNews(@RequestParam(required = false) LocalDateTime lastCreatedAt, @RequestParam Integer size) {
-        return newsService.getNextNews(lastCreatedAt, size);
+    public List<AttachmentNewsProjection> getNextNews(@RequestParam(required = false) Long lastContentId, @RequestParam Integer size) {
+        return newsService.getNextNews(lastContentId, size);
     }
 
     @GetMapping("/{newsId}")
-    public NewsVideoProjection getNewsVideoPage(@PathVariable Long newsId) {
-        return newsService.getNews(newsId);
+    public HttpEntity<NewsVideoProjection> getNewsVideoPage(@PathVariable Long newsId) {
+        return ResponseEntity.ok(newsService.getNews(newsId));
     }
 
     @PostMapping("/like")// like bosish yoki qaytarib olish

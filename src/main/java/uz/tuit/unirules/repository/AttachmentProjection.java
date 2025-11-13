@@ -7,5 +7,7 @@ public interface AttachmentProjection {
 
     String getTitle();
 
+    String getDescription();
+
     String getThumbnailImageUrl();
 }

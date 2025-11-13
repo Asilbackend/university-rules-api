@@ -71,15 +71,19 @@ public class Runner implements CommandLineRunner {
             saveRoles();
             saveUsers();
             if (profileActive.equals("dev")) {
-                saveAttachmentsMockData();
-                saveContentsAndModules();
+                /* List<Attachment> attachments = saveAttachmentsMockData();*/
+                List<Attachment> attachments = saveAttachmentsMockDataForServer();
+                saveContentsAndModules(attachments);
+            } else if (profileActive.equals("prod")) {
+                List<Attachment> attachments = saveAttachmentsMockDataForServer();
+                saveContentsAndModules(attachments);
             }
             saveFacultyGroupEduDirection();
         }
         System.out.println(serverUrl + "swagger-ui/index.html#/");
     }
 
-    private void saveAttachmentsMockData() {
+    List<Attachment> saveAttachmentsMockData() {
         try {
             Resource[] resources = new PathMatchingResourcePatternResolver()
                     .getResources("classpath:static/videos/*");
@@ -114,14 +118,62 @@ public class Runner implements CommandLineRunner {
 
                 unSavedAttachments.add(attachment);
             }
-            attachmentRepository.saveAll(unSavedAttachments);
+            return attachmentRepository.saveAll(unSavedAttachments);
+        } catch (IOException e) {
+            throw new RuntimeException("Error copying video files to templates folder", e);
+        }
+    }
+
+    List<Attachment> saveAttachmentsMockDataForServer() {
+        try {
+            Resource[] videoResources = new PathMatchingResourcePatternResolver()
+                    .getResources("classpath:templates/videos/*");
+
+            Resource[] picturesResources = new PathMatchingResourcePatternResolver()
+                    .getResources("classpath:templates/pictures/*");
+
+            List<Attachment> unSavedAttachments = new ArrayList<>();
+            String urlForThumb = null;
+
+            for (Resource resource : picturesResources) {
+                String filename = resource.getFilename();
+                // Attachment entity yasash
+                Attachment attachment = Attachment.builder()
+                        .url(serverUrl + "api/attachment/images/" + filename)
+                        .attachType(Attachment.AttachType.PICTURE)
+                        .videoDuration(null)
+                        .title("title" + UUID.randomUUID())
+                        .fileName(filename)
+                        .isDeleted(false)
+                        .build();
+                urlForThumb = attachment.getUrl();
+                unSavedAttachments.add(attachment);
+            }
+            int i = 0;
+            for (Resource resource : videoResources) {
+                String filename = resource.getFilename();
+                // Attachment entity yasash
+                Attachment attachment = Attachment.builder()
+                        .url(serverUrl + "api/attachment/videos/" + filename)
+                        .attachType(Attachment.AttachType.VIDEO)
+                        .videoDuration("01:05")
+                        .title("title" + UUID.randomUUID())
+                        .fileName(filename)
+                        .isDeleted(false)
+                        .thumbnailImageUrl(urlForThumb)
+                        .build();
+
+                unSavedAttachments.add(attachment);
+                i++;
+            }
+            return attachmentRepository.saveAll(unSavedAttachments);
         } catch (IOException e) {
             throw new RuntimeException("Error copying video files to templates folder", e);
         }
     }
 
 
-    private void saveContentsAndModules() {
+    private void saveContentsAndModules(List<Attachment> attachments) {
         List<Module> unsavedModules = new ArrayList<>();
 
         // 1. 20 ta Module yaratish
@@ -154,11 +206,12 @@ public class Runner implements CommandLineRunner {
 
             // 15 ta AttachmentElement yaratish
             List<ContentCreateDto.AttachmentElement> attachmentElements = new ArrayList<>();
-            for (int j = 0; j <= 6; j++) {
+            List<Attachment> attachmentVideos = attachments.stream().filter(attachment -> attachment.getAttachType() == Attachment.AttachType.VIDEO).toList();
+            for (int j = 0; j < attachmentVideos.size(); j++) {
                 attachmentElements.add(new ContentCreateDto.AttachmentElement(
                         "AttachmentTitle_" + UUID.randomUUID(),
-                        (long) j + 1L, // mavjud attachmentId ni o‘rniga real mavjud ID ni berish kerak
-                        j
+                        attachments.get(j).getId(), // mavjud attachmentId ni o‘rniga real mavjud ID ni berish kerak
+                        j, "description nimadir"
                 ));
             }
 
@@ -178,14 +231,29 @@ public class Runner implements CommandLineRunner {
 
 
     private void saveFacultyGroupEduDirection() {
-        Faculty faculty = Faculty.builder()
-                .description("faculty description")
-                .name("Kompyuter injiniringi")
+        Faculty kif = Faculty.builder()
+                .description("faculty description1")
+                .name("Komputer injiniringi")
                 .build();
-        facultyRepository.save(faculty);
+        Faculty dif = Faculty.builder()
+                .description("faculty description2")
+                .name("Daturiy injiniring")
+                .build();
+        Faculty ax = Faculty.builder()
+                .description("faculty description3")
+                .name("Axborot xavfsizligi")
+                .build();
+        Faculty kx = Faculty.builder()
+                .description("faculty description3")
+                .name("Kiber xavfsizlig")
+                .build();
+        facultyRepository.save(kif);
+        facultyRepository.save(dif);
+        facultyRepository.save(ax);
+        facultyRepository.save(kx);
         EducationDirection multimedia = EducationDirection.builder()
                 .name("Multimedia")
-                .faculty(faculty)
+                .faculty(kif)
                 .build();
         educationDirectionRepository.save(multimedia);
         Group group = Group.builder()

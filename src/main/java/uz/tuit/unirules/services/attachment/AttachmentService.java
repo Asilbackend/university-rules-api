@@ -127,6 +127,10 @@ public class AttachmentService {
 
     @Transactional
     public Attachment saveVideoWithPoster(MultipartFile file) throws IOException {
+        if (!file.getContentType().startsWith("video/")) {
+            throw new IllegalArgumentException("Faqat video fayl yuborish mumkin!");
+        }
+
         Attachment attachment = saveFile(file);
         if (!attachment.getAttachType().equals(Attachment.AttachType.VIDEO)) {
             return attachment;
@@ -134,12 +138,23 @@ public class AttachmentService {
         String imageName = UUID.randomUUID() + ".png";
         Path posterPath = Paths.get(imagePath + imageName);
         String posterUrl = imageUrl + imageName;
+        createAttachmentForPosterImg(posterUrl, imageName);
 
         byte[] thumbnail = getVideoThumbnail(Paths.get(videoPath + attachment.getFileName()));
         Files.write(posterPath, thumbnail);
-
         attachment.setThumbnailImageUrl(posterUrl);
         return attachmentRepository.save(attachment);
+    }
+
+    private void createAttachmentForPosterImg(String posterUrl, String imageName) {
+        Attachment posterAttachment = Attachment.builder()
+                .thumbnailImageUrl(null)
+                .url(posterUrl)
+                .attachType(Attachment.AttachType.PICTURE)
+                .fileName(imageName)
+                .isDeleted(false)
+                .build();
+        attachmentRepository.save(posterAttachment);
     }
 
     public HttpEntity<?> getFileByName(String fileName, Attachment.AttachType attachType) {
@@ -300,7 +315,7 @@ public class AttachmentService {
         }
     }
 
-    private  Process getProcess(Path videoPath, Path imagePath) throws IOException {
+    private Process getProcess(Path videoPath, Path imagePath) throws IOException {
         ProcessBuilder pb = new ProcessBuilder(
                 //yuklash oldidan:
                 //  "ffmpeg.exe",

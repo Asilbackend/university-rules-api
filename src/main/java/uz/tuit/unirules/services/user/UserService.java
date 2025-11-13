@@ -12,16 +12,22 @@ import uz.tuit.unirules.dto.request_dto.CreateUserReqDto;
 import uz.tuit.unirules.dto.request_dto.UpdateUserReqDto;
 import uz.tuit.unirules.dto.respond_dto.UserRespDto;
 import uz.tuit.unirules.entity.abs.roles.Role;
+import uz.tuit.unirules.entity.attachment.Attachment;
+import uz.tuit.unirules.entity.faculty.education_direction.EducationDirection;
 import uz.tuit.unirules.entity.faculty.group.Group;
 import uz.tuit.unirules.entity.user.User;
 
+import uz.tuit.unirules.entity.user_image.UserImage;
 import uz.tuit.unirules.projections.UserProjection;
+import uz.tuit.unirules.repository.UserImageRepository;
 import uz.tuit.unirules.repository.UserRepository;
 import uz.tuit.unirules.services.AuthUserService;
 import uz.tuit.unirules.services.faculty.GroupService;
 import uz.tuit.unirules.services.role.RoleService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -32,6 +38,7 @@ public class UserService {
     private final RoleService roleService;
     private final AuthUserService authUserService;
     private final PasswordEncoder passwordEncoder;
+    private final UserImageRepository userImageRepository;
 
     @Transactional
     public ApiResponse<UserRespDto> create(CreateUserReqDto createUserReqDto) {
@@ -60,6 +67,7 @@ public class UserService {
                     user.getLastname(),
                     user.getEmail(),
                     user.getPhone(),
+                    user.getUsername(),
                     user.getLanguage(),
                     user.isPassedTest(),
                     group.getId(),
@@ -95,6 +103,7 @@ public class UserService {
                 userProjection.getLastname(),
                 userProjection.getEmail(),
                 userProjection.getPhone(),
+                userProjection.getUsername(),
                 userProjection.getLanguage(),
                 userProjection.getPassedTest(),
                 userProjection.getGroupId(),
@@ -179,6 +188,7 @@ public class UserService {
                 user.getLastname(),
                 user.getEmail(),
                 user.getPhone(),
+                user.getUsername(),
                 user.getLanguage(),
                 user.getPassedTest(),
                 user.getGroupId(),
@@ -203,4 +213,46 @@ public class UserService {
         }
         return get(entityId);
     }
+
+    public Map<String, Object> getStudentData() {
+        User user = authUserService.getAuthUser();
+        Map<String, Object> data = new HashMap<>();
+
+        // Foydalanuvchi ma'lumotlarini xavfsiz olish
+        data.put("firstname", Optional.ofNullable(user.getFirstname()).orElse(""));
+        data.put("lastname", Optional.ofNullable(user.getLastname()).orElse(""));
+        data.put("lang", Optional.ofNullable(user.getLanguage()).orElse("uz"));
+
+        // Guruh va yo‘nalish xavfsiz tekshiruvi
+        Group group = user.getGroup();
+        if (group != null) {
+            data.put("groupName", Optional.ofNullable(group.getName()).orElse("Noma’lum guruh"));
+
+            EducationDirection direction = group.getEducationDirection();
+            data.put("direction", direction != null
+                    ? Optional.ofNullable(direction.getName()).orElse("Noma’lum yo‘nalish")
+                    : "Noma’lum yo‘nalish");
+        } else {
+            data.put("groupName", "Guruh belgilanmagan");
+            data.put("direction", "Yo‘nalish belgilanmagan");
+        }
+
+        // Foydalanuvchi rasmi
+        Optional<Attachment> optionalAttachment =
+                userImageRepository.findByUserIdOrderByIdDescDeletedFalse(user.getId());
+
+        optionalAttachment.ifPresentOrElse(
+                attachment -> {
+                    data.put("userImageUrl", attachment.getUrl());
+                    data.put("userImageId", attachment.getId());
+                },
+                () -> {
+                    data.put("userImageUrl", null);
+                    data.put("userImageId", null);
+                }
+        );
+
+        return data;
+    }
+
 }

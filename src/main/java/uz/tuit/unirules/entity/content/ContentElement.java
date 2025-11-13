@@ -38,6 +38,8 @@ public class ContentElement extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "content_id")
     private Content content;
+    @Column(nullable = true)
+    private String description;
 
     @PrePersist
     @PreUpdate

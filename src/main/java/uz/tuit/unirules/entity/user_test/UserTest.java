@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 public class UserTest extends BaseEntity {
+
     @ManyToOne(optional = false)
     private User user;
     @ManyToOne(optional = false)
@@ -30,4 +31,10 @@ public class UserTest extends BaseEntity {
     private LocalDateTime finishedAt;
     @Builder.Default
     private Boolean isDeleted = false;
+
+    public boolean isTestTimeOver() {
+        return getStartedAt()
+                .plusSeconds(getTest().getDurationSecond())
+                .isBefore(LocalDateTime.now());
+    }
 }

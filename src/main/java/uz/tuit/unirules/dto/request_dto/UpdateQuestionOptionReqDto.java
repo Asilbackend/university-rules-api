@@ -6,10 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
 public record UpdateQuestionOptionReqDto(
-        @NotNull
-        Long questionOptionId,
-        @NotNull
-        Long questionId,
+        Long questionOptionId, // agar null bolsa bu yangi QuestionOptiondir deb qabul qilamiz
         @NotNull
         @NotEmpty
         String result,

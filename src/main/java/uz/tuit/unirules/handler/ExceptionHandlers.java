@@ -5,6 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -148,6 +149,13 @@ public class ExceptionHandlers {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 new ApiResponse<>(HttpStatus.FORBIDDEN.value(), ex.getMessage(), false, null)
         );
+    }
+
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAuthError(AuthenticationCredentialsNotFoundException ex) {
+        printStackTrace(ex);
+        ApiResponse<Object> objectApiResponse = new ApiResponse<>(401, ex.getMessage(), false, null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(objectApiResponse);
     }
 
     public record ErrorResponse(

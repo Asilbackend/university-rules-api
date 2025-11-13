@@ -7,11 +7,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.tuit.unirules.dto.ApiResponse;
 import uz.tuit.unirules.dto.request_dto.ContentCreateDto;
-import uz.tuit.unirules.dto.respond_dto.ContentRespDto;
-
 import uz.tuit.unirules.services.content.ContentService;
 
-import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/content")
@@ -50,8 +48,14 @@ public class ContentController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping("/findAll")
-    public ApiResponse<List<?>> getAll(@RequestParam(required = false) Boolean isDeleted) {
+    public ApiResponse<Set<?>> getAll(@RequestParam(required = false) Boolean isDeleted) {
         return contentService.getAll(isDeleted);
+    }
+
+    @GetMapping("/forCreation/{contentId}")
+    public HttpEntity<ContentCreateDto> getContentToCreateDto(@PathVariable Long contentId) {
+        ContentCreateDto contentCreateDto = contentService.getById(contentId);
+        return ResponseEntity.ok(contentCreateDto);
     }
 
 

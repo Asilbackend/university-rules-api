@@ -13,10 +13,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface QuestionMapper {
-    @Mapping(target = "testId", source = "test",qualifiedByName = "testId")
-    @Mapping(target = "optionIds", source = "options",qualifiedByName = "findQuestionIds")
-    @Mapping(target = "questionId", source = "id")
-    QuestionRespDto toRespDto(Question question);
 
     @Named(value = "testId")
     static Long testId(Test test) {

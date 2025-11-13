@@ -51,31 +51,38 @@ public interface NewsRepository extends JpaRepository<News, Long> {
                      JOIN attachment a on a.id = n.attachment_id
                      LEFT JOIN news_student ns on ns.student_id = :userId
                 and ns.news_id = n.id
-            WHERE (:isInitial or n.created_at < :lastCreatedAt)
+            WHERE (:isInitial or n.id < :lastId)
               and n.is_deleted = false
-            ORDER BY n.created_at DESC
+            ORDER BY n.id DESC
             limit :limited
             """, nativeQuery = true)
-    List<AttachmentNewsProjection> findNextStoriesNative(@Param("lastCreatedAt") LocalDateTime lastCreatedAt,
+    List<AttachmentNewsProjection> findNextStoriesNative(@Param("lastId") Long lastId,
                                                          @Param("limited") int limited,
                                                          @Param("isInitial") boolean isInitial,
                                                          @Param("userId") Long userId);
 
     @Query(value = """
-            select a.id                                                               as attachmentId,
-                   a.thumbnail_image_url                                              as thumbNailUrl,
-                   (select count(ns1) from news_student ns1 where ns1.is_like = true) as likeCount,
-                   ns.is_like                                                         as isLiked,
-                   n.name                                                             as title,
-                   n.description                                                      as description,
-                   a.video_duration                                                   as videoDuration
-            from news n
-                     join attachment a on a.id = n.attachment_id
-                     left join news_student ns on ns.news_id = n.id
-                and ns.student_id = :userId
-            where n.is_deleted = false
-              and a.is_deleted = false
-              and n.id = :newsId
+            SELECT a.id                           AS attachmentId,
+                   a.thumbnail_image_url          AS thumbNailUrl,
+                   a.url                          as videoUrl,
+                   COALESCE(counts.like_count, 0) AS likeCount,
+                   coalesce(ns.is_like, false)    AS isLiked,
+                   n.name                         AS title,
+                   n.description                  AS description,
+                   a.video_duration               AS videoDuration,
+                   COALESCE(counts.seen_count, 0) AS seenCount
+            FROM news n
+                     JOIN attachment a ON a.id = n.attachment_id
+                     LEFT JOIN news_student ns ON ns.news_id = n.id AND ns.student_id = :userId
+                     LEFT JOIN (SELECT ns1.news_id,
+                                       COUNT(*) FILTER (WHERE ns1.is_like = true) AS like_count,
+                                       COUNT(*) FILTER (WHERE ns1.is_seen = true) AS seen_count
+                                FROM news_student ns1
+                                GROUP BY ns1.news_id) counts ON counts.news_id = n.id
+            WHERE n.is_deleted = false
+              AND a.is_deleted = false
+              AND n.id = :newsId
+            order by n.id desc;
             """, nativeQuery = true)
     Optional<NewsVideoProjection> findNewsVideoInfo(Long newsId, Long userId);
 

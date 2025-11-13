@@ -22,4 +22,6 @@ public class Group extends BaseEntity {
     private Boolean isDeleted = false;
     @ManyToOne
     private EducationDirection educationDirection;
+    /*// qoshildi,
+    private Integer currentYear; //1,2,3,4,5 - nechanchi kurs degani*/
 }

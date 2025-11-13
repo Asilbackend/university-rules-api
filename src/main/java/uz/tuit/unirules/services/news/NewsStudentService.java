@@ -2,6 +2,7 @@ package uz.tuit.unirules.services.news;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.tuit.unirules.entity.news.News;
 import uz.tuit.unirules.entity.news.NewsStudent;
 import uz.tuit.unirules.entity.news.NewsStudentRepository;
@@ -17,6 +18,7 @@ public class NewsStudentService {
     private final UserService userService;
     private final NewsRepository newsRepository;
 
+    @Transactional
     public NewsStudent findIfCreate(Long newsId, Long studentId) {
         Optional<NewsStudent> optionalNewsStudent = newsStudentRepository.findByNewsIdAndStudentId(newsId, studentId);
         return optionalNewsStudent.orElseGet(() -> newsStudentRepository.save(
